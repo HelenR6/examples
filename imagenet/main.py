@@ -16,7 +16,24 @@ import torch.utils.data
 import torch.utils.data.distributed
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
-import torchvision.models as models
+#import torchvision.models as models
+import Resnet.vision.torchvision.models as models
+from torch.utils.data import Dataset 
+from pytorch_pretrained_biggan import (BigGAN, one_hot_from_names, truncated_noise_sample,
+                                       save_as_images, convert_to_images,display_in_terminal)
+import logging
+import torch.nn.functional as F
+import urllib
+from PIL import Image
+from torchvision import transforms
+from numpy import linalg as LA
+import numpy as np
+from scipy.stats import truncnorm
+from torch.autograd import Variable
+import imageio
+import random
+from torch.utils.data import Dataset
+from torch.utils.data import DataLoader
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -32,15 +49,24 @@ parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
                         ' (default: resnet18)')
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
-parser.add_argument('--epochs', default=90, type=int, metavar='N',
+# parser.add_argument('--epochs', default=90, type=int, metavar='N',
+#                     help='number of total epochs to run')
+parser.add_argument('--epochs', default=1, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=256, type=int,
+# parser.add_argument('-b', '--batch-size', default=256, type=int,
+#                     metavar='N',
+#                     help='mini-batch size (default: 256), this is the total '
+#                          'batch size of all GPUs on the current node when '
+#                          'using Data Parallel or Distributed Data Parallel')
+parser.add_argument('-b', '--batch-size', default=6, type=int,
                     metavar='N',
-                    help='mini-batch size (default: 256), this is the total '
+                    help='mini-batch size (default: 6), this is the total '
                          'batch size of all GPUs on the current node when '
                          'using Data Parallel or Distributed Data Parallel')
+parser.add_argument('-t','--temp', default=1, type=int, metavar='T',
+                    help='temperature of distillation')
 parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
                     metavar='LR', help='initial learning rate', dest='lr')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
@@ -168,7 +194,12 @@ def main_worker(gpu, ngpus_per_node, args):
             model = torch.nn.DataParallel(model).cuda()
 
     # define loss function (criterion) and optimizer
-    criterion = nn.CrossEntropyLoss().cuda(args.gpu)
+    #criterion = nn.CrossEntropyLoss().cuda(args.gpu)
+    def criterion(z,class_vector,z_hat,class_hat,T):
+        loss_fn_class=nn.KLDivLoss()(F.log_softmax(class_hat/T,dim=1),F.softmax(class_vector/T,dim=1))* (T * T) 
+        loss_fn_z=nn.MSELoss()(z,z_hat)
+        total_loss=loss_fn_class+loss_fn_z
+        return total_loss
 
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
@@ -218,9 +249,9 @@ def main_worker(gpu, ngpus_per_node, args):
     else:
         train_sampler = None
 
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
-        num_workers=args.workers, pin_memory=True, sampler=train_sampler)
+    # train_loader = torch.utils.data.DataLoader(
+    #     train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
+    #     num_workers=args.workers, pin_memory=True, sampler=train_sampler)
 
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
@@ -235,22 +266,39 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.evaluate:
         validate(val_loader, model, criterion, args)
         return
-
+    truncation=0.5
+    GAN_model = BigGAN.from_pretrained('biggan-deep-256')
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
         adjust_learning_rate(optimizer, epoch, args)
-
+        # if args.gpu is not None:
+        #     device= torch.device("cuda:0")
+        image_list=[]
+        class_list=[]
+        z_list=[]
+        for b in range(args.batch_size):
+            z_np = truncated_normal((1, 128), low=-2, high=2)
+            z=Variable(torch.from_numpy(z_np), requires_grad=True).cuda(args.gpu).detach()
+            class_vector = torch.FloatTensor(1, 1000).zero_()
+            class_vector[:, random.randint(0, 999)] = 1
+            start_point=GAN_model(z,class_vector,truncation)
+            image_list.append(start_point)
+            z_list.append(z)
+            class_list.append(class_vector)
+        train_dataset = GANDataset(z_list,image_list,class_list)
+        train_loader=DataLoader(dataset=train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),num_workers=args.workers, pin_memory=True)
         # train for one epoch
         train(train_loader, model, criterion, optimizer, epoch, args)
 
-        # evaluate on validation set
-        acc1 = validate(val_loader, model, criterion, args)
+        # # evaluate on validation set
+        # acc1 = validate(val_loader, model, criterion, args)
 
-        # remember best acc@1 and save checkpoint
-        is_best = acc1 > best_acc1
-        best_acc1 = max(acc1, best_acc1)
-
+        # # remember best acc@1 and save checkpoint
+        # is_best = acc1 > best_acc1
+        # best_acc1 = max(acc1, best_acc1)
+        is_best=True
+        best_acc1=0
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                 and args.rank % ngpus_per_node == 0):
             save_checkpoint({
@@ -259,6 +307,7 @@ def main_worker(gpu, ngpus_per_node, args):
                 'state_dict': model.state_dict(),
                 'best_acc1': best_acc1,
                 'optimizer' : optimizer.state_dict(),
+                'T': args.temp(),
             }, is_best)
 
 
@@ -277,24 +326,30 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
     model.train()
 
     end = time.time()
-    for i, (images, target) in enumerate(train_loader):
+    #for i, (images, target) in enumerate(train_loader):
+    for i, (images, target_z,target_class_vector) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
 
         if args.gpu is not None:
             images = images.cuda(args.gpu, non_blocking=True)
         if torch.cuda.is_available():
-            target = target.cuda(args.gpu, non_blocking=True)
+            #target = target.cuda(args.gpu, non_blocking=True)
+            target_z = target_z.cuda(args.gpu, non_blocking=True)
+            target_class_vector = target_class_vector.cuda(args.gpu, non_blocking=True)
 
         # compute output
-        output = model(images)
-        loss = criterion(output, target)
+        #output = model(images)
+        z,class_vector= model(images)
+        #loss = criterion(output, target)
+        T=args.temp
+        loss = criterion(target_z,target_class_vector,z,class_vector,T)
 
-        # measure accuracy and record loss
-        acc1, acc5 = accuracy(output, target, topk=(1, 5))
-        losses.update(loss.item(), images.size(0))
-        top1.update(acc1[0], images.size(0))
-        top5.update(acc5[0], images.size(0))
+        # # measure accuracy and record loss
+        # acc1, acc5 = accuracy(output, target, topk=(1, 5))
+        # losses.update(loss.item(), images.size(0))
+        # top1.update(acc1[0], images.size(0))
+        # top5.update(acc5[0], images.size(0))
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
@@ -332,6 +387,7 @@ def validate(val_loader, model, criterion, args):
 
             # compute output
             output = model(images)
+            #z,class_vector= model(images)
             loss = criterion(output, target)
 
             # measure accuracy and record loss
@@ -358,7 +414,22 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
     torch.save(state, filename)
     if is_best:
         shutil.copyfile(filename, 'model_best.pth.tar')
-
+def truncated_normal(size, low=0, high=1):
+    values = truncnorm.rvs(low, high, size=size).astype(np.float32)
+    return values
+class GANDataset(Dataset):
+    def __init__(self,z_list,image_list,class_list):
+        self.z_list=z_list
+        self.image_list=image_list
+        self.class_list=class_list
+    def __len__(self):
+        return len(self.z_list)
+    def __getitem__(self,index):
+        z=self.z_list[index]
+        class_vector=self.class_list[index]
+        image=self.image_list[index]
+        return(z,class_vector,image)
+        #return(z,image)
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -423,7 +494,6 @@ def accuracy(output, target, topk=(1,)):
             correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
-
 
 if __name__ == '__main__':
     main()
