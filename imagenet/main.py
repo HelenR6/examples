@@ -18,8 +18,6 @@ import torch.utils.data.distributed
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from multiprocessing import set_start_method
-#import matplotlib.pyplot as plt
-#import torchvision.models as models
 
 import sys
 sys.path.insert(1,'/scratch/helenr6/vision/torchvision')
@@ -111,14 +109,7 @@ parser.add_argument('--multiprocessing-distributed', action='store_true',
                          'multi node data parallel training')
 
 best_acc1 = 0
-# args = parser.parse_args()
-# model = models.__dict__[args.arch]()
-# for (name, layer) in model._modules.items():
-#     #iteration over outer layers
-#     print((name, layer))
-# if args.gpu is not None:
-#     print("hello gpu")
-#     warnings.warn('You have chosen a specific GPU. This will completely ')
+
 
 def main():
     args = parser.parse_args()
@@ -298,6 +289,9 @@ def main_worker(gpu, ngpus_per_node, args):
         class_list=[]
         z_list=[]
         m = nn.Softmax(dim=1)
+        
+        #TODO: generate images in batch
+        
         for b in range(args.batch_size):
             z_np = truncated_normal((1, 128), low=-2, high=2)
             z=Variable(torch.from_numpy(z_np), requires_grad=True).cuda(args.gpu).detach()
@@ -308,6 +302,9 @@ def main_worker(gpu, ngpus_per_node, args):
             z_list.append(z)
             class_list.append(class_vector)
         train_dataset = GANDataset(z_list,image_list,class_list)
+        
+        #TODO: add preprocessing to the dataset
+        
         train_loader=torch.utils.data.DataLoader(dataset=train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),num_workers=args.workers, pin_memory=False)
         # train for one epoch
         train(train_loader, model, criterion, optimizer, epoch, args)
@@ -392,6 +389,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
     #plt.plot(loss_list)
     print(loss_list)
 
+#TODO: modify validate
 
 # def validate(val_loader, model, criterion, args):
 #     batch_time = AverageMeter('Time', ':6.3f')
@@ -507,6 +505,7 @@ def adjust_learning_rate(optimizer, epoch, args):
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
+#TODO: modify accuracy
 
 # def accuracy(output, target, topk=(1,)):
 #     """Computes the accuracy over the k top predictions for the specified values of k"""
