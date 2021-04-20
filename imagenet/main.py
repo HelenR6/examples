@@ -25,18 +25,6 @@ import sys
 sys.path.insert(1,'/scratch/helenr6/vision/torchvision')
 import models
 
-# sys.path.append('/vision/torchvision/models')
-#import models as models
-#import models
-#import vision.torchvision as torchvision
-# import os
-# os.chdir('/scratch/helenr6/vision/torchvision')
-# print("Current working directory: {0}".format(os.getcwd()))
-#import models
-#from helenr6.vision.torchvision import models
-#from vision.torchvision import models
-#import torchvision.models as models 
-#import vision.torchvision.models as models
 from torch.utils.data import Dataset 
 from pytorch_pretrained_biggan import (BigGAN, one_hot_from_names, truncated_noise_sample,
                                        save_as_images, convert_to_images,display_in_terminal)
@@ -53,7 +41,6 @@ import imageio
 import random
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-print("hello world")
 #resnet=models.resnet50()
 
 model_names = sorted(name for name in models.__dict__
@@ -215,7 +202,6 @@ def main_worker(gpu, ngpus_per_node, args):
     elif args.gpu is not None:
         #torch.cuda.set_device(args.gpu)
         torch.cuda.set_device(args.gpu)
-        # model = model.cuda(args.gpu)
         model = model.cuda()
     else:
         # DataParallel will divide and allocate batch_size to all available GPUs
@@ -314,11 +300,8 @@ def main_worker(gpu, ngpus_per_node, args):
         m = nn.Softmax(dim=1)
         for b in range(args.batch_size):
             z_np = truncated_normal((1, 128), low=-2, high=2)
-            #z=Variable(torch.from_numpy(z_np), requires_grad=True).cuda(args.gpu).detach().requires_grad_(True)
             z=Variable(torch.from_numpy(z_np), requires_grad=True).cuda(args.gpu).detach()
             input = torch.randn(1, 1000)
-            #class_vector = torch.FloatTensor(1, 1000).zero_()
-            #class_vector[:, random.randint(0, 999)] = 1
             class_vector=m(input).cuda(args.gpu).detach()
             start_point=GAN_model(z,class_vector,truncation)
             image_list.append(start_point.detach())
