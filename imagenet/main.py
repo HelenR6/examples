@@ -18,6 +18,9 @@ import torch.utils.data.distributed
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from multiprocessing import set_start_method
+from multiprocessing import freeze_support
+#import matplotlib.pyplot as plt
+#import torchvision.models as models
 
 import sys
 sys.path.insert(1,'/scratch/helenr6/vision/torchvision')
@@ -39,7 +42,6 @@ import imageio
 import random
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-#resnet=models.resnet50()
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -110,7 +112,6 @@ parser.add_argument('--multiprocessing-distributed', action='store_true',
 
 best_acc1 = 0
 
-
 def main():
     args = parser.parse_args()
     print("Current working directory: {0}".format(os.getcwd()))
@@ -138,6 +139,8 @@ def main():
         # Since we have ngpus_per_node processes per node, the total world_size
         # needs to be adjusted accordingly
         args.world_size = ngpus_per_node * args.world_size
+        print(args.world_size)
+        print("hello multi")
         # Use torch.multiprocessing.spawn to launch distributed processes: the
         # main_worker process function
         mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args))
@@ -147,6 +150,7 @@ def main():
 
 
 def main_worker(gpu, ngpus_per_node, args):
+    print("main_worker")
     global best_acc1
     args.gpu = gpu
 
@@ -193,6 +197,7 @@ def main_worker(gpu, ngpus_per_node, args):
     elif args.gpu is not None:
         #torch.cuda.set_device(args.gpu)
         torch.cuda.set_device(args.gpu)
+        # model = model.cuda(args.gpu)
         model = model.cuda()
     else:
         # DataParallel will divide and allocate batch_size to all available GPUs
@@ -254,10 +259,10 @@ def main_worker(gpu, ngpus_per_node, args):
     #         normalize,
     #     ]))
 
-    if args.distributed:
-        train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
-    else:
-        train_sampler = None
+    # if args.distributed:
+    #     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+    # else:
+    #     train_sampler = None
 
     # train_loader = torch.utils.data.DataLoader(
     #     train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
@@ -278,34 +283,40 @@ def main_worker(gpu, ngpus_per_node, args):
         return
     truncation=0.5
     GAN_model = BigGAN.from_pretrained('biggan-deep-256')
+    print(args.gpu)
     GAN_model.cuda(args.gpu)
+    #Wrap the model as a DistributedDataParallel model.
+    GAN_model=torch.nn.parallel.DistributedDataParallel(GAN_model, device_ids=[args.gpu])
     for epoch in range(args.start_epoch, args.epochs):
-        if args.distributed:
-            train_sampler.set_epoch(epoch)
+
+        # if args.distributed:
+        #     train_sampler.set_epoch(epoch)
+
         adjust_learning_rate(optimizer, epoch, args)
-        # if args.gpu is not None:
-        #     device= torch.device("cuda:0")
         image_list=[]
         class_list=[]
         z_list=[]
         m = nn.Softmax(dim=1)
-        
-        #TODO: generate images in batch
-        
         for b in range(args.batch_size):
             z_np = truncated_normal((1, 128), low=-2, high=2)
             z=Variable(torch.from_numpy(z_np), requires_grad=True).cuda(args.gpu).detach()
             input = torch.randn(1, 1000)
             class_vector=m(input).cuda(args.gpu).detach()
-            start_point=GAN_model(z,class_vector,truncation)
-            image_list.append(start_point.detach())
             z_list.append(z)
             class_list.append(class_vector)
+        z_list=torch.cat(z_list)
+        class_list=torch.cat(class_list)
+        image_list=GAN_model(z_list,class_list,truncation)
+        image_list=image_list.detach()
         train_dataset = GANDataset(z_list,image_list,class_list)
-        
-        #TODO: add preprocessing to the dataset
-        
-        train_loader=torch.utils.data.DataLoader(dataset=train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),num_workers=args.workers, pin_memory=False)
+        #The nn.utils.data.DistributedSampler makes sure that each process gets a different slice of the training data.
+        if args.distributed:
+            train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+        else:
+            train_sampler = None
+        if args.distributed:
+            train_sampler.set_epoch(epoch)
+        train_loader=torch.utils.data.DataLoader(dataset=train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),num_workers=args.workers, pin_memory=True,sampler=train_sampler)
         # train for one epoch
         train(train_loader, model, criterion, optimizer, epoch, args)
 
@@ -389,7 +400,6 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
     #plt.plot(loss_list)
     print(loss_list)
 
-#TODO: modify validate
 
 # def validate(val_loader, model, criterion, args):
 #     batch_time = AverageMeter('Time', ':6.3f')
@@ -505,7 +515,6 @@ def adjust_learning_rate(optimizer, epoch, args):
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
-#TODO: modify accuracy
 
 # def accuracy(output, target, topk=(1,)):
 #     """Computes the accuracy over the k top predictions for the specified values of k"""
@@ -524,5 +533,5 @@ def adjust_learning_rate(optimizer, epoch, args):
 #         return res
 
 if __name__ == '__main__':
-    set_start_method('spawn')
+    #set_start_method('spawn')
     main()
