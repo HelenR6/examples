@@ -5,7 +5,6 @@ import random
 import shutil
 import time
 import warnings
-
 import torch
 import torch.nn as nn
 import torch.nn.parallel
@@ -18,17 +17,27 @@ import torch.utils.data.distributed
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from multiprocessing import set_start_method
-from multiprocessing import freeze_support
 #import matplotlib.pyplot as plt
 #import torchvision.models as models
-
 import sys
 sys.path.insert(1,'/scratch/helenr6/vision/torchvision')
 import models
 
+ # sys.path.append('/vision/torchvision/models')
+ #import models as models
+ #import models
+ #import vision.torchvision as torchvision
+ # import os
+ # os.chdir('/scratch/helenr6/vision/torchvision')
+ # print("Current working directory: {0}".format(os.getcwd()))
+ #import models
+ #from helenr6.vision.torchvision import models
+ #from vision.torchvision import models
+ #import torchvision.models as models 
+ #import vision.torchvision.models as models
 from torch.utils.data import Dataset 
 from pytorch_pretrained_biggan import (BigGAN, one_hot_from_names, truncated_noise_sample,
-                                       save_as_images, convert_to_images,display_in_terminal)
+                                        save_as_images, convert_to_images,display_in_terminal)
 import logging
 import torch.nn.functional as F
 import urllib
@@ -42,11 +51,12 @@ import imageio
 import random
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
+print("hello world")
+#resnet=models.resnet50()
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
-
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 # parser.add_argument('data', metavar='DIR',
 #                     help='path to dataset')
@@ -109,9 +119,15 @@ parser.add_argument('--multiprocessing-distributed', action='store_true',
                          'N processes per node, which has N GPUs. This is the '
                          'fastest way to use PyTorch for either single node or '
                          'multi node data parallel training')
-
 best_acc1 = 0
-
+# args = parser.parse_args()
+# model = models.__dict__[args.arch]()
+# for (name, layer) in model._modules.items():
+#     #iteration over outer layers
+#     print((name, layer))
+# if args.gpu is not None:
+#     print("hello gpu")
+#     warnings.warn('You have chosen a specific GPU. This will completely ')
 def main():
     args = parser.parse_args()
     print("Current working directory: {0}".format(os.getcwd()))
@@ -124,39 +140,28 @@ def main():
                       'which can slow down your training considerably! '
                       'You may see unexpected behavior when restarting '
                       'from checkpoints.')
-
     if args.gpu is not None:
         warnings.warn('You have chosen a specific GPU. This will completely '
                       'disable data parallelism.')
-
     if args.dist_url == "env://" and args.world_size == -1:
         args.world_size = int(os.environ["WORLD_SIZE"])
-
     args.distributed = args.world_size > 1 or args.multiprocessing_distributed
-
     ngpus_per_node = torch.cuda.device_count()
     if args.multiprocessing_distributed:
         # Since we have ngpus_per_node processes per node, the total world_size
         # needs to be adjusted accordingly
         args.world_size = ngpus_per_node * args.world_size
-        print(args.world_size)
-        print("hello multi")
         # Use torch.multiprocessing.spawn to launch distributed processes: the
         # main_worker process function
         mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args))
     else:
         # Simply call main_worker function
         main_worker(args.gpu, ngpus_per_node, args)
-
-
 def main_worker(gpu, ngpus_per_node, args):
-    print("main_worker")
     global best_acc1
     args.gpu = gpu
-
     if args.gpu is not None:
         print("Use GPU: {} for training".format(args.gpu))
-
     if args.distributed:
         if args.dist_url == "env://" and args.rank == -1:
             args.rank = int(os.environ["RANK"])
@@ -173,7 +178,6 @@ def main_worker(gpu, ngpus_per_node, args):
     else:
         print("=> creating model '{}'".format(args.arch))
         model = models.__dict__[args.arch]()
-
     if not torch.cuda.is_available():
         print('using CPU, this will be slow')
     elif args.distributed:
@@ -200,13 +204,15 @@ def main_worker(gpu, ngpus_per_node, args):
         # model = model.cuda(args.gpu)
         model = model.cuda()
     else:
-        # DataParallel will divide and allocate batch_size to all available GPUs
+         # DataParallel will divide and allocate batch_size to all available GPUs
         if args.arch.startswith('alexnet') or args.arch.startswith('vgg'):
             model.features = torch.nn.DataParallel(model.features)
             model.cuda()
         else:
+            print("dataparallel enabled")
             model = torch.nn.DataParallel(model).cuda()
-
+            GAN_model = BigGAN.from_pretrained('biggan-deep-256')
+            GAN_model = torch.nn.DataParallel(GAN_model).cuda()
     # define loss function (criterion) and optimizer
     #criterion = nn.CrossEntropyLoss().cuda(args.gpu)
     def criterion(z,class_vector,z_hat,class_hat,T):
@@ -215,11 +221,9 @@ def main_worker(gpu, ngpus_per_node, args):
         total_loss=loss_fn_class+loss_fn_z
         return total_loss
         #return torch.norm(class_vector-class_hat) +torch.norm(z-z_hat)
-
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
-
     # optionally resume from a checkpoint
     if args.resume:
         if os.path.isfile(args.resume):
@@ -241,15 +245,12 @@ def main_worker(gpu, ngpus_per_node, args):
                   .format(args.resume, checkpoint['epoch']))
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
-
     cudnn.benchmark = True
-
     # # Data loading code
     # traindir = os.path.join(args.data, 'train')
     # valdir = os.path.join(args.data, 'val')
     # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
     #                                  std=[0.229, 0.224, 0.225])
-
     # train_dataset = datasets.ImageFolder(
     #     traindir,
     #     transforms.Compose([
@@ -258,16 +259,13 @@ def main_worker(gpu, ngpus_per_node, args):
     #         transforms.ToTensor(),
     #         normalize,
     #     ]))
-
-    # if args.distributed:
-    #     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
-    # else:
-    #     train_sampler = None
-
+    if args.distributed:
+        train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+    else:
+        train_sampler = None
     # train_loader = torch.utils.data.DataLoader(
     #     train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
     #     num_workers=args.workers, pin_memory=True, sampler=train_sampler)
-
     # val_loader = torch.utils.data.DataLoader(
     #     datasets.ImageFolder(valdir, transforms.Compose([
     #         transforms.Resize(256),
@@ -277,31 +275,33 @@ def main_worker(gpu, ngpus_per_node, args):
     #     ])),
     #     batch_size=args.batch_size, shuffle=False,
     #     num_workers=args.workers, pin_memory=True)
-
     if args.evaluate:
         validate(val_loader, model, criterion, args)
         return
     truncation=0.5
-    GAN_model = BigGAN.from_pretrained('biggan-deep-256')
-    print(args.gpu)
-    GAN_model.cuda(args.gpu)
-    #Wrap the model as a DistributedDataParallel model.
-    GAN_model=torch.nn.parallel.DistributedDataParallel(GAN_model, device_ids=[args.gpu])
+    # GAN_model = BigGAN.from_pretrained('biggan-deep-256')
+    # #GAN_model.cuda(args.gpu)
+    # GAN_model = torch.nn.DataParallel(GAN_model).cuda()
     for epoch in range(args.start_epoch, args.epochs):
-
-        # if args.distributed:
-        #     train_sampler.set_epoch(epoch)
-
+        if args.distributed:
+            train_sampler.set_epoch(epoch)
         adjust_learning_rate(optimizer, epoch, args)
+        # if args.gpu is not None:
+        #     device= torch.device("cuda:0")
         image_list=[]
         class_list=[]
         z_list=[]
         m = nn.Softmax(dim=1)
         for b in range(args.batch_size):
             z_np = truncated_normal((1, 128), low=-2, high=2)
+            #z=Variable(torch.from_numpy(z_np), requires_grad=True).cuda(args.gpu).detach().requires_grad_(True)
             z=Variable(torch.from_numpy(z_np), requires_grad=True).cuda(args.gpu).detach()
             input = torch.randn(1, 1000)
+            #class_vector = torch.FloatTensor(1, 1000).zero_()
+            #class_vector[:, random.randint(0, 999)] = 1
             class_vector=m(input).cuda(args.gpu).detach()
+            # start_point=GAN_model(z,class_vector,truncation)
+            # image_list.append(start_point.detach())
             z_list.append(z)
             class_list.append(class_vector)
         z_list=torch.cat(z_list)
@@ -309,20 +309,12 @@ def main_worker(gpu, ngpus_per_node, args):
         image_list=GAN_model(z_list,class_list,truncation)
         image_list=image_list.detach()
         train_dataset = GANDataset(z_list,image_list,class_list)
-        #The nn.utils.data.DistributedSampler makes sure that each process gets a different slice of the training data.
-        if args.distributed:
-            train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
-        else:
-            train_sampler = None
-        if args.distributed:
-            train_sampler.set_epoch(epoch)
-        train_loader=torch.utils.data.DataLoader(dataset=train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),num_workers=args.workers, pin_memory=True,sampler=train_sampler)
+        print("before dataloader")
+        train_loader=torch.utils.data.DataLoader(dataset=train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),num_workers=args.workers, pin_memory=False)
         # train for one epoch
         train(train_loader, model, criterion, optimizer, epoch, args)
-
         # # evaluate on validation set
         # acc1 = validate(val_loader, model, criterion, args)
-
         # # remember best acc@1 and save checkpoint
         # is_best = acc1 > best_acc1
         # best_acc1 = max(acc1, best_acc1)
@@ -338,8 +330,6 @@ def main_worker(gpu, ngpus_per_node, args):
         #         'optimizer' : optimizer.state_dict(),
         #         'T': args.temp(),
         #     }, is_best)
-
-
 def train(train_loader, model, criterion, optimizer, epoch, args):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
@@ -351,23 +341,19 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         len(train_loader),
         [batch_time, data_time, losses, top1, top5],
         prefix="Epoch: [{}]".format(epoch))
-
     # switch to train mode
     model.train()
-
     end = time.time()
     #for i, (images, target) in enumerate(train_loader):
     for i, (target_z,target_class_vector,images) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
-
         if args.gpu is not None:
             images = images.cuda(args.gpu, non_blocking=True)
         if torch.cuda.is_available():
             #target = target.cuda(args.gpu, non_blocking=True)
             target_z = target_z.cuda(args.gpu, non_blocking=True)
             target_class_vector = target_class_vector.cuda(args.gpu, non_blocking=True)
-
         # compute output
         #output = model(images)
         images=images.squeeze(dim=1)
@@ -378,29 +364,23 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         target_z=target_z.squeeze()
         target_class_vector=target_class_vector.squeeze()
         loss = criterion(target_z,target_class_vector,z,class_vector,T)
-
         # # measure accuracy and record loss
         # acc1, acc5 = accuracy(output, target, topk=(1, 5))
         losses.update(loss.item(), images.size(0))
         # top1.update(acc1[0], images.size(0))
         # top5.update(acc5[0], images.size(0))
-
         loss_list.append(loss.item())
         # compute gradient and do SGD step
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
-
         if i % args.print_freq == 0:
             progress.display(i)
     #plt.plot(loss_list)
     print(loss_list)
-
-
 # def validate(val_loader, model, criterion, args):
 #     batch_time = AverageMeter('Time', ':6.3f')
 #     losses = AverageMeter('Loss', ':.4e')
@@ -410,10 +390,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
 #         len(val_loader),
 #         [batch_time, losses, top1, top5],
 #         prefix='Test: ')
-
 #     # switch to evaluate mode
 #     model.eval()
-
 #     with torch.no_grad():
 #         end = time.time()
 #         for i, (images, target) in enumerate(val_loader):
@@ -421,32 +399,24 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
 #                 images = images.cuda(args.gpu, non_blocking=True)
 #             if torch.cuda.is_available():
 #                 target = target.cuda(args.gpu, non_blocking=True)
-
 #             # compute output
 #             output = model(images)
 #             #z,class_vector= model(images)
 #             loss = criterion(output, target)
-
 #             # measure accuracy and record loss
 #             acc1, acc5 = accuracy(output, target, topk=(1, 5))
 #             losses.update(loss.item(), images.size(0))
 #             top1.update(acc1[0], images.size(0))
 #             top5.update(acc5[0], images.size(0))
-
 #             # measure elapsed time
 #             batch_time.update(time.time() - end)
 #             end = time.time()
-
 #             if i % args.print_freq == 0:
 #                 progress.display(i)
-
 #         # TODO: this should also be done with the ProgressMeter
 #         print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
 #               .format(top1=top1, top5=top5))
-
 #     return top1.avg
-
-
 # def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
 #     torch.save(state, filename)
 #     if is_best:
@@ -467,71 +437,56 @@ class GANDataset(Dataset):
         image=self.image_list[index]
         return(z,class_vector,image)
         #return(z,image)
-
 class AverageMeter(object):
     """Computes and stores the average and current value"""
     def __init__(self, name, fmt=':f'):
         self.name = name
         self.fmt = fmt
         self.reset()
-
     def reset(self):
         self.val = 0
         self.avg = 0
         self.sum = 0
         self.count = 0
-
     def update(self, val, n=1):
         self.val = val
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
-
     def __str__(self):
         fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
         return fmtstr.format(**self.__dict__)
-
-
 class ProgressMeter(object):
     def __init__(self, num_batches, meters, prefix=""):
         self.batch_fmtstr = self._get_batch_fmtstr(num_batches)
         self.meters = meters
         self.prefix = prefix
-
     def display(self, batch):
         entries = [self.prefix + self.batch_fmtstr.format(batch)]
         entries += [str(meter) for meter in self.meters]
         print('\t'.join(entries))
-
     def _get_batch_fmtstr(self, num_batches):
         num_digits = len(str(num_batches // 1))
         fmt = '{:' + str(num_digits) + 'd}'
         return '[' + fmt + '/' + fmt.format(num_batches) + ']'
-
-
 def adjust_learning_rate(optimizer, epoch, args):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
     lr = args.lr * (0.1 ** (epoch // 30))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
-
-
 # def accuracy(output, target, topk=(1,)):
 #     """Computes the accuracy over the k top predictions for the specified values of k"""
 #     with torch.no_grad():
 #         maxk = max(topk)
 #         batch_size = target.size(0)
-
 #         _, pred = output.topk(maxk, 1, True, True)
 #         pred = pred.t()
 #         correct = pred.eq(target.view(1, -1).expand_as(pred))
-
 #         res = []
 #         for k in topk:
 #             correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
 #             res.append(correct_k.mul_(100.0 / batch_size))
 #         return res
-
 if __name__ == '__main__':
-    #set_start_method('spawn')
+    set_start_method('spawn')
     main()
