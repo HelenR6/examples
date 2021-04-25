@@ -51,7 +51,6 @@ import imageio
 import random
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-print("hello world")
 #resnet=models.resnet50()
 
 model_names = sorted(name for name in models.__dict__
@@ -67,7 +66,7 @@ parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
                         ' (default: resnet18)')
 # parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
 #                     help='number of data loading workers (default: 4)')
-parser.add_argument('-j', '--workers', default=1, type=int, metavar='N',
+parser.add_argument('-j', '--workers', default=2, type=int, metavar='N',
                     help='number of data loading workers (default: 1)')
 # parser.add_argument('--epochs', default=90, type=int, metavar='N',
 #                     help='number of total epochs to run')
@@ -80,9 +79,9 @@ parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
 #                     help='mini-batch size (default: 256), this is the total '
 #                          'batch size of all GPUs on the current node when '
 #                          'using Data Parallel or Distributed Data Parallel')
-parser.add_argument('-b', '--batch-size', default=128, type=int,
+parser.add_argument('-b', '--batch-size', default=16, type=int,
                     metavar='N',
-                    help='mini-batch size (default: 128), this is the total '
+                    help='mini-batch size (default: 64), this is the total '
                          'batch size of all GPUs on the current node when '
                          'using Data Parallel or Distributed Data Parallel')
 parser.add_argument('-t','--temp', default=1, type=int, metavar='T',
@@ -120,14 +119,7 @@ parser.add_argument('--multiprocessing-distributed', action='store_true',
                          'fastest way to use PyTorch for either single node or '
                          'multi node data parallel training')
 best_acc1 = 0
-# args = parser.parse_args()
-# model = models.__dict__[args.arch]()
-# for (name, layer) in model._modules.items():
-#     #iteration over outer layers
-#     print((name, layer))
-# if args.gpu is not None:
-#     print("hello gpu")
-#     warnings.warn('You have chosen a specific GPU. This will completely ')
+
 def main():
     args = parser.parse_args()
     print("Current working directory: {0}".format(os.getcwd()))
@@ -280,7 +272,7 @@ def main_worker(gpu, ngpus_per_node, args):
         return
     truncation=0.5
     # GAN_model = BigGAN.from_pretrained('biggan-deep-256')
-    # #GAN_model.cuda(args.gpu)
+    # # #GAN_model.cuda(args.gpu)
     # GAN_model = torch.nn.DataParallel(GAN_model).cuda()
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
@@ -292,23 +284,14 @@ def main_worker(gpu, ngpus_per_node, args):
         class_list=[]
         z_list=[]
         m = nn.Softmax(dim=1)
-        for b in range(args.batch_size):
-            z_np = truncated_normal((1, 128), low=-2, high=2)
-            #z=Variable(torch.from_numpy(z_np), requires_grad=True).cuda(args.gpu).detach().requires_grad_(True)
-            z=Variable(torch.from_numpy(z_np), requires_grad=True).cuda(args.gpu).detach()
-            input = torch.randn(1, 1000)
-            #class_vector = torch.FloatTensor(1, 1000).zero_()
-            #class_vector[:, random.randint(0, 999)] = 1
-            class_vector=m(input).cuda(args.gpu).detach()
-            # start_point=GAN_model(z,class_vector,truncation)
-            # image_list.append(start_point.detach())
-            z_list.append(z)
-            class_list.append(class_vector)
-        z_list=torch.cat(z_list)
-        class_list=torch.cat(class_list)
-        image_list=GAN_model(z_list,class_list,truncation)
+        z_np = truncated_normal((args.batch_size, 128), low=-2, high=2)
+        z=Variable(torch.from_numpy(z_np), requires_grad=True).cuda(args.gpu).detach()
+        input = torch.randn(args.batch_size, 1000)
+        class_vector=m(input).cuda(args.gpu).detach()
+        image_list=GAN_model(z,class_vector,truncation)
         image_list=image_list.detach()
-        train_dataset = GANDataset(z_list,image_list,class_list)
+        #train_dataset = GANDataset(z_list,image_list,class_list)
+        train_dataset = GANDataset(z,image_list,class_vector)
         print("before dataloader")
         train_loader=torch.utils.data.DataLoader(dataset=train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),num_workers=args.workers, pin_memory=False)
         # train for one epoch
