@@ -470,7 +470,7 @@ def validate(val_loader, model, criterion, args):
         print(' * accuracy_values {accuracy_value:.3f} '
               .format(accuracy_value=accuracy_value))
     #return top1.avg
-    return 0
+    return accuracy_value
 # def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
 #     torch.save(state, filename)
 #     if is_best:
