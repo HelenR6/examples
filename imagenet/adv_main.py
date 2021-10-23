@@ -126,7 +126,7 @@ def load_model(model_type):
 
   if model_type=="mocov2":
     # load checkpoints of mocov2
-    state_dict = torch.load('/content/gdrive/MyDrive/model_checkpoints/moco_v2_200ep_pretrain.pth.tar',map_location=torch.device('cpu'))['state_dict']
+    state_dict = torch.load('/content/gdrive/MyDrive/moco/moco_v2_200ep_pretrain.pth.tar',map_location=torch.device('cpu'))['state_dict']
     resnet = models.resnet50(pretrained=False)
     for k in list(state_dict.keys()):
         if k.startswith('module.encoder_q') and not k.startswith('module.encoder_q.fc'):
@@ -422,7 +422,7 @@ def main_worker(gpu, ngpus_per_node, args):
             transforms.Resize(256),
             transforms.CenterCrop(224),
             transforms.ToTensor(),
-            normalize,
+            # normalize,
         ])),
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)
@@ -539,7 +539,8 @@ def validate(val_loader, model, criterion, args):
 
     # switch to evaluate mode
     model.eval()
-
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
     with torch.no_grad():
         # adversary = LinfPGDAttack(
         # model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=0.15,
@@ -552,6 +553,7 @@ def validate(val_loader, model, criterion, args):
         end = time.time()
         print("enumerate dataloader")
         for i, (images, target) in enumerate(val_loader):
+            # print(images)
             if args.gpu is not None:
                 images = images.cuda(args.gpu, non_blocking=True)
             if torch.cuda.is_available():
@@ -559,7 +561,7 @@ def validate(val_loader, model, criterion, args):
             with torch.enable_grad():
                 adv_untargeted = adversary.perturb(images, target)
             # compute output
-            output = model(adv_untargeted)
+            output = model(normalize(adv_untargeted))
             loss = criterion(output, target)
             # measure accuracy and record loss
             acc1, acc5 = accuracy(output, target, topk=(1, 5))
