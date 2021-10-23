@@ -80,7 +80,7 @@ best_acc1 = 0
 def load_model(model_type):
   if model_type=="simclr":
     # load checkpoint for simclr
-    checkpoint = torch.load('/content/gdrive/MyDrive/resnet50-1x.pth')
+    checkpoint = torch.load('/content/gdrive/MyDrive/model_checkpoints/resnet50-1x.pth')
     resnet = models.resnet50(pretrained=False)
     resnet.load_state_dict(checkpoint['state_dict'])
     # preprocess images for simclr
@@ -105,7 +105,7 @@ def load_model(model_type):
     return resnet
   if model_type=="moco":
     # load checkpoints of moco
-    state_dict = torch.load('/content/gdrive/MyDrive/moco/moco_v1_200ep_pretrain.pth.tar',map_location=torch.device('cpu'))['state_dict']
+    state_dict = torch.load('/content/gdrive/MyDrive/model_checkpoints/moco_v1_200ep_pretrain.pth.tar',map_location=torch.device('cpu'))['state_dict']
     resnet = models.resnet50(pretrained=False)
     for k in list(state_dict.keys()):
         if k.startswith('module.encoder_q') and not k.startswith('module.encoder_q.fc'):
@@ -148,7 +148,7 @@ def load_model(model_type):
   if model_type=="InsDis":
     # load checkpoints for instance recoginition resnet
     resnet=models.resnet50(pretrained=False)
-    state_dict = torch.load('/content/gdrive/MyDrive/moco/lemniscate_resnet50_update.pth',map_location=torch.device('cpu') )['state_dict']
+    state_dict = torch.load('/content/gdrive/MyDrive/model_checkpoints/lemniscate_resnet50_update.pth',map_location=torch.device('cpu') )['state_dict']
     for k in list(state_dict.keys()):
         if k.startswith('module') and not k.startswith('module.fc'):
             state_dict[k[len("module."):]] = state_dict[k]
@@ -169,7 +169,7 @@ def load_model(model_type):
   if model_type=="place365_rn50":
     # load checkpoints for place365 resnet
     resnet=models.resnet50(pretrained=False)
-    state_dict = torch.load('/content/gdrive/MyDrive/resnet50_places365.pth.tar',map_location=torch.device('cpu') )['state_dict']
+    state_dict = torch.load('/content/gdrive/MyDrive/model_checkpoints/resnet50_places365.pth.tar',map_location=torch.device('cpu') )['state_dict']
     for k in list(state_dict.keys()):
         if k.startswith('module') and not k.startswith('module.fc'):
             state_dict[k[len("module."):]] = state_dict[k]
@@ -204,7 +204,7 @@ def load_model(model_type):
   if model_type=="wsl_resnext101":
     # load wsl resnext101
     resnet= models.resnext101_32x8d(pretrained=False)
-    checkpoint = torch.load("/content/gdrive/MyDrive/resent_wsl/ig_resnext101_32x8-c38310e5.pth")
+    checkpoint = torch.load("/content/gdrive/MyDrive/model_checkpoints/ig_resnext101_32x8-c38310e5.pth")
     resnet.load_state_dict(checkpoint)
     #preprocess for wsl resnext101
     preprocess = transforms.Compose([
