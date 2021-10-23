@@ -430,8 +430,8 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.evaluate:
         print("evaluating")
         top1,top5=validate(val_loader, model, criterion, args)
-        print("final top 1 accuracy:"+top1)
-        print("final top 5 accuracy:"+top5)
+#         print("final top 1 accuracy:"+top1)
+#         print("final top 5 accuracy:"+top5)
         return
     train_dataset = datasets.ImageFolder(
         traindir,
