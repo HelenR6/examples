@@ -77,7 +77,216 @@ parser.add_argument('--multiprocessing-distributed', action='store_true',
                          'multi node data parallel training')
 
 best_acc1 = 0
+def load_model(model_type):
+  if model_type=="simclr":
+    # load checkpoint for simclr
+    checkpoint = torch.load('/content/gdrive/MyDrive/resnet50-1x.pth')
+    resnet = models.resnet50(pretrained=False)
+    resnet.load_state_dict(checkpoint['state_dict'])
+    # preprocess images for simclr
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(256),
+    transforms.ToTensor()
+    ])
+    return resnet
 
+  if model_type=="simclr_v2_0":
+    # load checkpoint for simclr
+    checkpoint = torch.load('/content/gdrive/MyDrive/r50_1x_sk0.pth')
+    resnet = models.resnet50(pretrained=False)
+    resnet.load_state_dict(checkpoint['resnet'])
+    # preprocess images for simclr
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(256),
+    transforms.ToTensor()
+    ])
+    return resnet
+  if model_type=="moco":
+    # load checkpoints of moco
+    state_dict = torch.load('/content/gdrive/MyDrive/moco/moco_v1_200ep_pretrain.pth.tar',map_location=torch.device('cpu'))['state_dict']
+    resnet = models.resnet50(pretrained=False)
+    for k in list(state_dict.keys()):
+        if k.startswith('module.encoder_q') and not k.startswith('module.encoder_q.fc'):
+            state_dict[k[len("module.encoder_q."):]] = state_dict[k]
+        del state_dict[k]
+    msg = resnet.load_state_dict(state_dict, strict=False)
+    assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
+    #preprocess for moco
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225])
+    ])
+    return resnet
+
+  if model_type=="mocov2":
+    # load checkpoints of mocov2
+    state_dict = torch.load('/content/gdrive/MyDrive/moco/moco_v2_200ep_pretrain.pth.tar',map_location=torch.device('cpu'))['state_dict']
+    resnet = models.resnet50(pretrained=False)
+    for k in list(state_dict.keys()):
+        if k.startswith('module.encoder_q') and not k.startswith('module.encoder_q.fc'):
+            state_dict[k[len("module.encoder_q."):]] = state_dict[k]
+        del state_dict[k]
+    msg = resnet.load_state_dict(state_dict, strict=False)
+    assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
+    #preprocess for mocov2
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225])
+    ])
+    return resnet
+
+  if model_type=="InsDis":
+    # load checkpoints for instance recoginition resnet
+    resnet=models.resnet50(pretrained=False)
+    state_dict = torch.load('/content/gdrive/MyDrive/moco/lemniscate_resnet50_update.pth',map_location=torch.device('cpu') )['state_dict']
+    for k in list(state_dict.keys()):
+        if k.startswith('module') and not k.startswith('module.fc'):
+            state_dict[k[len("module."):]] = state_dict[k]
+        del state_dict[k]
+    msg = resnet.load_state_dict(state_dict, strict=False)
+    assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
+    #preprocess for instance recoginition resnet
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225])
+    ])
+    return resnet
+
+  if model_type=="place365_rn50":
+    # load checkpoints for place365 resnet
+    resnet=models.resnet50(pretrained=False)
+    state_dict = torch.load('/content/gdrive/MyDrive/resnet50_places365.pth.tar',map_location=torch.device('cpu') )['state_dict']
+    for k in list(state_dict.keys()):
+        if k.startswith('module') and not k.startswith('module.fc'):
+            state_dict[k[len("module."):]] = state_dict[k]
+        del state_dict[k]
+    msg = resnet.load_state_dict(state_dict, strict=False)
+    assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
+    #preprocess for place365-resnet50
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225])
+    ])
+    return resnet
+
+  if model_type=="resnext101":
+    #load ResNeXt 101_32x8 imagenet trained model
+    resnet=models.resnext101_32x8d(pretrained=True)
+    #preprocess for resnext101
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225])
+    ])
+    return resnet
+
+  if model_type=="wsl_resnext101":
+    # load wsl resnext101
+    resnet= models.resnext101_32x8d(pretrained=False)
+    checkpoint = torch.load("/content/gdrive/MyDrive/resent_wsl/ig_resnext101_32x8-c38310e5.pth")
+    resnet.load_state_dict(checkpoint)
+    #preprocess for wsl resnext101
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225])
+    ])
+    return resnet
+
+  if model_type=="st_resnet":
+    # load checkpoint for st resnet
+    resnet=models.resnet50(pretrained=True)
+    #preprocess for st_resnet50
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225])
+    ])
+    return resnet
+
+  if model_type=="st_alexnet":
+    # load checkpoint for st alexnet
+    alexnet=models.alexnet(pretrained=True)
+    #preprocess for alexnet
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225])
+    ])
+    return alexnet
+
+  if model_type=="clip":
+    import clip
+    resnet, preprocess = clip.load("RN50")
+    return resnet
+
+  if model_type=='linf_8':
+    resnet = torch.load('/content/gdrive/MyDrive/imagenet_linf_8_model.pt') # https://drive.google.com/file/d/1DRkIcM_671KQNhz1BIXMK6PQmHmrYy_-/view?usp=sharing
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225])
+    ])
+    return resnet
+
+
+  if model_type=='linf_4':
+    resnet = torch.load('/content/gdrive/MyDrive/robust_resnet.pt')#https://drive.google.com/file/d/1_tOhMBqaBpfOojcueSnYQRw_QgXdPVS6/view?usp=sharing
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225])
+    ])
+    return resnet
+
+
+  if model_type=='l2_3':
+    resnet = torch.load('/content/gdrive/MyDrive/imagenet_l2_3_0_model.pt') # https://drive.google.com/file/d/1SM9wnNr_WnkEIo8se3qd3Di50SUT9apn/view?usp=sharing 
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225])
+    ])
+    return resnet
 
 def main():
     args = parser.parse_args()
@@ -133,7 +342,8 @@ def main_worker(gpu, ngpus_per_node, args):
     # create model
     if args.pretrained:
         print("=> using pre-trained model '{}'".format(args.arch))
-        model = models.__dict__[args.arch](pretrained=True)
+        # model = models.__dict__[args.arch](pretrained=True)
+        model = load_model(args.arch)
     else:
         print("=> creating model '{}'".format(args.arch))
         model = models.__dict__[args.arch]()
