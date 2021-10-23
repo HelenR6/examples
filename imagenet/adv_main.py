@@ -561,7 +561,12 @@ def validate(val_loader, model, criterion, args):
             with torch.enable_grad():
                 adv_untargeted = adversary.perturb(images, target)
             # compute output
-            output = model(normalize(adv_untargeted))
+            if args.arch=='simclr':
+                output = model(adv_untargeted)
+            elif args.arch=='linf_4' or args.arch=='linf_8' or args.arch=='l2_3':
+                output,x = model(normalize(adv_untargeted))
+            else:
+                output = model(normalize(adv_untargeted))
             loss = criterion(output, target)
             # measure accuracy and record loss
             acc1, acc5 = accuracy(output, target, topk=(1, 5))
