@@ -277,15 +277,25 @@ def load_model(model_type):
 
 
   if model_type=='l2_3':
-    resnet = torch.load('/content/gdrive/MyDrive/model_checkpoints/imagenet_l2_3_0_model.pt') # https://drive.google.com/file/d/1SM9wnNr_WnkEIo8se3qd3Di50SUT9apn/view?usp=sharing 
-    preprocess = transforms.Compose([
-    transforms.Resize(256),
-    transforms.CenterCrop(224),
-    transforms.ToTensor(),
-    transforms.Normalize(
-    mean=[0.485, 0.456, 0.406],
-    std=[0.229, 0.224, 0.225])
-    ])
+#     resnet = torch.load('/content/gdrive/MyDrive/model_checkpoints/imagenet_l2_3_0_model.pt') # https://drive.google.com/file/d/1SM9wnNr_WnkEIo8se3qd3Di50SUT9apn/view?usp=sharing 
+#     preprocess = transforms.Compose([
+#     transforms.Resize(256),
+#     transforms.CenterCrop(224),
+#     transforms.ToTensor(),
+#     transforms.Normalize(
+#     mean=[0.485, 0.456, 0.406],
+#     std=[0.229, 0.224, 0.225])
+#     ])
+#     return resnet
+    resnet=models.resnet50(pretrained=False)
+    checkpoint = torch.load('/content/gdrive/MyDrive/model_checkpoints/imagenet_l2_3_0.pt',map_location=torch.device('cpu') )
+    state_dict=checkpoint['model']
+    for k in list(state_dict.keys()):
+        if k.startswith('module.model.') and not k.startswith('module.normalize') :
+
+            state_dict[k[len('module.model.'):]] = state_dict[k]
+        del state_dict[k]
+    resnet.load_state_dict(state_dict)
     return resnet
 
 def main():
