@@ -557,8 +557,8 @@ def validate(val_loader, model, criterion, args):
         # nb_iter=40, eps_iter=0.01, rand_init=True, clip_min=0.0, clip_max=1.0,
         # targeted=False)
         adversary = L2PGDAttack(
-        model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=3.0,
-        nb_iter=20, eps_iter=0.375, rand_init=True, clip_min=0.0, clip_max=1.0,
+        model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=14.2737,
+        nb_iter=20, eps_iter=1.784, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
         targeted=False)
         end = time.time()
         print("enumerate dataloader")
