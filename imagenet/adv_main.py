@@ -422,7 +422,7 @@ def main_worker(gpu, ngpus_per_node, args):
             transforms.Resize(256),
             transforms.CenterCrop(224),
             transforms.ToTensor(),
-            # normalize,
+            normalize,
         ])),
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)
@@ -564,9 +564,9 @@ def validate(val_loader, model, criterion, args):
             if args.arch=='simclr':
                 output = model(adv_untargeted)
             elif args.arch=='linf_4' or args.arch=='linf_8' or args.arch=='l2_3':
-                output,x = model(normalize(adv_untargeted))
+                output,x = model((adv_untargeted))
             else:
-                output = model(normalize(adv_untargeted))
+                output = model((adv_untargeted))
             loss = criterion(output, target)
             # measure accuracy and record loss
             acc1, acc5 = accuracy(output, target, topk=(1, 5))
