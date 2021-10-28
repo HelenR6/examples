@@ -8,6 +8,8 @@ from tqdm.notebook import tqdm
 import numpy as np
 import torch
 import clip
+import torch.nn as nn
+
 from tqdm.notebook import tqdm
 
 print("Torch version:", torch.__version__)
@@ -137,7 +139,7 @@ def accuracy(output, target, topk=(1,)):
     correct = pred.eq(target.view(1, -1).expand_as(pred))
     return [float(correct[:k].reshape(-1).float().sum(0, keepdim=True).cpu().numpy()) for k in topk]
 adversary = L2PGDAttack(
-model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=9.9756,
+model.visual, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=9.9756,
 nb_iter=20, eps_iter=1.24695, rand_init=True, clip_min=-1.1793, clip_max=2.1459,
 targeted=False)
 with torch.no_grad():
