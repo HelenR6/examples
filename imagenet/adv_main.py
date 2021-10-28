@@ -291,9 +291,9 @@ def load_model(model_type):
     checkpoint = torch.load('/content/gdrive/MyDrive/model_checkpoints/imagenet_l2_3_0.pt',map_location=torch.device('cpu') )
     state_dict=checkpoint['model']
     for k in list(state_dict.keys()):
-        if k.startswith('module.model.') and not k.startswith('module.normalize') :
+        if k.startswith('module.attacker.model.') and not k.startswith('module.attacker.normalize') :
 
-            state_dict[k[len('module.model.'):]] = state_dict[k]
+            state_dict[k[len('module.attacker.model.'):]] = state_dict[k]
         del state_dict[k]
     resnet.load_state_dict(state_dict)
     return resnet
@@ -574,7 +574,7 @@ def validate(val_loader, model, criterion, args):
             if args.arch=='simclr':
                 output = model(adv_untargeted)
             elif args.arch=='linf_4' or args.arch=='linf_8' or args.arch=='l2_3':
-                output,x = model.attacker((adv_untargeted))
+                output= model((adv_untargeted))
             else:
                 output = model((adv_untargeted))
             loss = criterion(output, target)
