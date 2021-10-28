@@ -574,7 +574,7 @@ def validate(val_loader, model, criterion, args):
             if args.arch=='simclr':
                 output = model(adv_untargeted)
             elif args.arch=='linf_4' or args.arch=='linf_8' or args.arch=='l2_3':
-                output,x = model((adv_untargeted))
+                output,x = model.attacker((adv_untargeted))
             else:
                 output = model((adv_untargeted))
             loss = criterion(output, target)
