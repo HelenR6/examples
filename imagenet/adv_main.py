@@ -169,13 +169,13 @@ def load_model(model_type):
   if model_type=="place365_rn50":
     # load checkpoints for place365 resnet
     resnet=models.resnet50(pretrained=False)
-    state_dict = torch.load('/content/gdrive/MyDrive/model_checkpoints/resnet50_places365.pth.tar',map_location=torch.device('cpu') )['state_dict']
-    for k in list(state_dict.keys()):
-        if k.startswith('module') and not k.startswith('module.fc'):
-            state_dict[k[len("module."):]] = state_dict[k]
-        del state_dict[k]
+    state_dict = torch.load('/content/gdrive/MyDrive/model_checkpoints/resnet50_places365.pth.tar',map_location=torch.device('cuda') )['state_dict']
+#     for k in list(state_dict.keys()):
+#         if k.startswith('module') and not k.startswith('module.fc'):
+#             state_dict[k[len("module."):]] = state_dict[k]
+#         del state_dict[k]
     msg = resnet.load_state_dict(state_dict, strict=False)
-    assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
+#     assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
     #preprocess for place365-resnet50
     preprocess = transforms.Compose([
     transforms.Resize(256),
