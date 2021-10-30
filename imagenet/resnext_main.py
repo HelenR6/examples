@@ -19,6 +19,12 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 from advertorch.attacks import LinfPGDAttack, L2PGDAttack
 import numpy as np
+from PIL import Image
+import matplotlib.pyplot as plt
+import cv2
+import torchvision
+from torchvision.utils import save_image
+
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -78,6 +84,21 @@ parser.add_argument('--multiprocessing-distributed', action='store_true',
 
 best_acc1 = 0
 
+class DeNormalize(object):
+    def __init__(self, mean, std):
+        self.mean = mean
+        self.std = std
+    def __call__(self, tensor):
+        """
+        Args:
+            tensor (Tensor): Tensor image of size (C, H, W) to be normalized.
+        Returns:
+            Tensor: Normalized image.
+        """
+        for t, m, s in zip(tensor, self.mean, self.std):
+            t.mul_(s).add_(m)
+            # The normalize code -> t.sub_(m).div_(s)
+        return tensor
 
 def main():
     args = parser.parse_args()
@@ -113,6 +134,10 @@ def main():
         # Simply call main_worker function
         main_worker(args.gpu, ngpus_per_node, args)
 
+def denormalize_transform():
+  denormal = DeNormalize(
+      mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+  return denormal
 
 def main_worker(gpu, ngpus_per_node, args):
     global best_acc1
@@ -206,14 +231,17 @@ def main_worker(gpu, ngpus_per_node, args):
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
     val_loader = torch.utils.data.DataLoader(
-        datasets.ImageFolder(valdir, transforms.Compose([
+        datasets.ImageFolder(valdir, 
+        transforms.Compose([
             transforms.Resize(256),
             transforms.CenterCrop(224),
             transforms.ToTensor(),
             normalize,
-        ])),
+        ])
+        ),
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)
+
 
     if args.evaluate:
         validate(val_loader, model, criterion, args)
@@ -324,7 +352,7 @@ def validate(val_loader, model, criterion, args):
 
     # switch to evaluate mode
     model.eval()
-
+    de_transform = denormalize_transform()
     with torch.no_grad():
         adversary = L2PGDAttack(
         model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=14.2737,
@@ -333,6 +361,34 @@ def validate(val_loader, model, criterion, args):
 
         end = time.time()
         for i, (images, target) in enumerate(val_loader):
+            # save_image(images[0], 'img1.png')
+            # de_transform(images)
+            save_image(images[2], 'img1.png')
+            print(images.shape)
+            grid_img = torchvision.utils.make_grid(images, nrow=4)
+            print(grid_img.shape)
+            grid_img=grid_img.permute(1, 2, 0)
+            # plt.imsave('test.png', grid_img.permute(1, 2, 0))
+            plt.imshow(grid_img)
+            
+            plt.show(block=False)
+            plt.pause(3)
+            plt.close()
+            return
+            # image_numpy=images.numpy()
+            # temp=image_numpy.transpose(0,2,3,1)
+            # img = Image.fromarray(temp[0].squeeze(),'RGB')
+            # img.save('my.png')
+            # img.show()
+
+            # image = np.asarray(bytearray(image_numpy), dtype="uint8")
+            # image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+            # cv2.imshow('image',image)
+            # cv2.waitKey(0)
+
+
+            # print(temp.shape)
+            # print(type(images))
             if args.gpu is not None:
                 images = images.cuda(args.gpu, non_blocking=True)
             if torch.cuda.is_available():
@@ -355,7 +411,7 @@ def validate(val_loader, model, criterion, args):
 
             if i % args.print_freq == 0:
                 progress.display(i)
-
+        plt.show()
         # TODO: this should also be done with the ProgressMeter
         print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
               .format(top1=top1, top5=top5))
