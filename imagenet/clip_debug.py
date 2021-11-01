@@ -19,14 +19,14 @@ print("Torch version:", torch.__version__)
 assert torch.__version__.split(".") >= ["1", "7", "1"], "PyTorch 1.7.1 or later is required"
 
 model, preprocess = clip.load("RN50")
-preprocess = transforms.Compose([
-    transforms.Resize(256),
-    transforms.CenterCrop(224),
-    transforms.ToTensor(),
-    transforms.Normalize(
-    mean=[0.485, 0.456, 0.406],
-    std=[0.229, 0.224, 0.225])
-    ])
+# preprocess = transforms.Compose([
+#     transforms.Resize(256),
+#     transforms.CenterCrop(224),
+#     transforms.ToTensor(),
+#     transforms.Normalize(
+#     mean=[0.485, 0.456, 0.406],
+#     std=[0.229, 0.224, 0.225])
+#     ])
 input_resolution = model.visual.input_resolution
 context_length = model.context_length
 vocab_size = model.vocab_size
@@ -122,15 +122,19 @@ imagenet_templates = [
 
 print(f"{len(imagenet_classes)} classes, {len(imagenet_templates)} templates")
 import torchvision
+# loader = torch.utils.data.DataLoader(
+#     torchvision.datasets.ImageFolder('/content/gdrive/MyDrive/imagenet/val',  transforms.Compose([
+#     transforms.Resize(256),
+#     transforms.CenterCrop(224),
+#     transforms.ToTensor(),
+#     transforms.Normalize(
+#     mean=[0.485, 0.456, 0.406],
+#     std=[0.229, 0.224, 0.225])
+#     ])),
+#     batch_size=4, shuffle=False,
+#     num_workers=2)
 loader = torch.utils.data.DataLoader(
-    torchvision.datasets.ImageFolder('/content/gdrive/MyDrive/imagenet/val',  transforms.Compose([
-    transforms.Resize(256),
-    transforms.CenterCrop(224),
-    transforms.ToTensor(),
-    transforms.Normalize(
-    mean=[0.485, 0.456, 0.406],
-    std=[0.229, 0.224, 0.225])
-    ])),
+    torchvision.datasets.ImageFolder('/content/gdrive/MyDrive/imagenet/val', preprocess),
     batch_size=4, shuffle=False,
     num_workers=2)
 
@@ -156,16 +160,17 @@ def accuracy(output, target, topk=(1,)):
     correct = pred.eq(target.view(1, -1).expand_as(pred))
     return [float(correct[:k].reshape(-1).float().sum(0, keepdim=True).cpu().numpy()) for k in topk]
 resnet=models.resnet50(pretrained=True)
+resnet=resnet.cuda()
 model.visual=model.visual.eval()
 
 resnet_adversary = L2PGDAttack(
 resnet, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=9.9756,
-nb_iter=20, eps_iter=1.24695, rand_init=True, clip_min=-1.1793, clip_max=2.1459,
+nb_iter=20, eps_iter=1.24695, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
 targeted=False)
 
 adversary = L2PGDAttack(
-model.visual, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=9.9756,
-nb_iter=20, eps_iter=1.24695, rand_init=True, clip_min=-1.1793, clip_max=2.1459,
+model.visual, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=14.2737,
+nb_iter=20, eps_iter=1.784, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
 targeted=False)
 with torch.no_grad():
     top1, top5, n = 0., 0., 0.
