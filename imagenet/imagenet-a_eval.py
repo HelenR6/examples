@@ -1,7 +1,7 @@
 import calibration_tools
 import numpy as np
 import os
-import pretrainedmodels
+# import pretrainedmodels
 import torch
 import torch.nn as nn
 import torchvision.datasets as dset
