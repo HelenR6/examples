@@ -19,7 +19,8 @@ from copy import copy
 from tqdm import tqdm
 
 
-PATH_TO_IMAGENET_A = "./imagenet-a"
+#PATH_TO_IMAGENET_A = "./imagenet-a"
+PATH_TO_IMAGENET_A ="/content/gdrive/MyDrive/imagenet-a"
 
 mean = [0.485, 0.456, 0.406]
 std = [0.229, 0.224, 0.225]
