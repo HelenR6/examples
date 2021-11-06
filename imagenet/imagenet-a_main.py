@@ -625,7 +625,7 @@ def validate(val_loader, model, criterion, args):
     accuracy_array=[]
     accuracy_array.append(top1.avg)
     accuracy_array.append(top5.avg)
-    np.save(f'/content/gdrive/MyDrive/model_OOD_acc/sketch/{args.arch}_accuracy.npy', accuracy_array)
+    np.save(f'/content/gdrive/MyDrive/model_OOD_acc/imagenet-a/{args.arch}_accuracy.npy', accuracy_array)
     return top1.avg, top5.avg
 
 
