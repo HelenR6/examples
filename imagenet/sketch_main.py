@@ -586,42 +586,46 @@ def validate(val_loader, model, criterion, args):
 #         targeted=False)
         end = time.time()
         print("enumerate dataloader")
+        min_val=0
+        max_val=0
         for i, (images, target) in enumerate(val_loader):
-            print(images)
-#             if args.gpu is not None:
-#                 images = images.cuda(args.gpu, non_blocking=True)
-#             if torch.cuda.is_available():
-#                 target = target.cuda(args.gpu, non_blocking=True)
-#             with torch.enable_grad():
-#                 adv_untargeted = adversary.perturb(images, target)
-#             # compute output
-#             if args.arch=='simclr':
-#                 output = model(adv_untargeted)
-#             elif args.arch=='linf_4' or args.arch=='linf_8' or args.arch=='l2_3':
-#                 output= model((adv_untargeted))
-#             else:
-#                 output = model((adv_untargeted))
-#             loss = criterion(output, target)
-#             # measure accuracy and record loss
-#             acc1, acc5 = accuracy(output, target, topk=(1, 5))
-#             losses.update(loss.item(), images.size(0))
-#             top1.update(acc1[0], images.size(0))
-#             top5.update(acc5[0], images.size(0))
+            # print(images)
+            if args.gpu is not None:
+                images = images.cuda(args.gpu, non_blocking=True)
+            if torch.cuda.is_available():
+                target = target.cuda(args.gpu, non_blocking=True)
+            # with torch.enable_grad():
+            #     adv_untargeted = adversary.perturb(images, target)
+            # compute output
+            if args.arch=='simclr':
+                output = model(images)
+            elif args.arch=='linf_4' or args.arch=='linf_8' or args.arch=='l2_3':
+                output= model((images))
+            else:
+                output = model((images))
+            loss = criterion(output, target)
+            # measure accuracy and record loss
+            acc1, acc5 = accuracy(output, target, topk=(1, 5))
+            losses.update(loss.item(), images.size(0))
+            top1.update(acc1[0], images.size(0))
+            top5.update(acc5[0], images.size(0))
 
-#             # measure elapsed time
-#             batch_time.update(time.time() - end)
-#             end = time.time()
+            # measure elapsed time
+            batch_time.update(time.time() - end)
+            end = time.time()
 
-#             if i % args.print_freq == 0:
-#                 progress.display(i)
+            if i % args.print_freq == 0:
+                progress.display(i)
 
         # TODO: this should also be done with the ProgressMeter
+    print("!!!!!!!!!!!!!!!!!!")
+    print(min_val,max_val)
     print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
             .format(top1=top1, top5=top5))
     accuracy_array=[]
     accuracy_array.append(top1.avg)
     accuracy_array.append(top5.avg)
-    np.save(f'/content/gdrive/MyDrive/model_adv_loss/{args.arch}_accuracy.npy', accuracy_array)
+    np.save(f'/content/gdrive/MyDrive/model_OOD_acc/sketch/{args.arch}_accuracy.npy', accuracy_array)
     return top1.avg, top5.avg
 
 
