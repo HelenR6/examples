@@ -122,11 +122,11 @@ imagenet_templates = [
 ]
 
 print(f"{len(imagenet_classes)} classes, {len(imagenet_templates)} templates")
-import torchvision
-loader = torch.utils.data.DataLoader(
-    torchvision.datasets.ImageFolder('/content/gdrive/MyDrive/imagenet/val', preprocess),
-    batch_size=8, shuffle=False,
-    num_workers=2)
+# import torchvision
+# loader = torch.utils.data.DataLoader(
+#     torchvision.datasets.ImageFolder('/content/gdrive/MyDrive/imagenet/val', preprocess),
+#     batch_size=8, shuffle=False,
+#     num_workers=2)
 
 def zeroshot_classifier(classnames, templates):
     with torch.no_grad():
@@ -155,7 +155,7 @@ def accuracy(output, target, topk=(1,)):
 # targeted=False)
 with torch.no_grad():
     top1, top5, n = 0., 0., 0.
-    for i, (images, target) in enumerate(tqdm(loader)):
+    for i, (images, target) in enumerate(tqdm(nae_loader)):
         images = images.cuda()
         target = target.cuda()
 #         with torch.enable_grad():
