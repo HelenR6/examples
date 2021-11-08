@@ -1,6 +1,6 @@
 
 
-from advertorch.attacks import LinfPGDAttack, L2PGDAttack
+# from advertorch.attacks import LinfPGDAttack, L2PGDAttack
 import numpy as np
 import torch
 import clip
@@ -142,8 +142,12 @@ def zeroshot_classifier(classnames, templates):
         zeroshot_weights = torch.stack(zeroshot_weights, dim=1).cuda()
     return zeroshot_weights
 
-
-zeroshot_weights = zeroshot_classifier(imagenet_classes[indices_in_1k,:], imagenet_templates)
+c= []
+for index in indices_in_1k:
+    c.append(imagenet_classes[index])
+# print(c)
+# print(len(c))
+zeroshot_weights = zeroshot_classifier(c, imagenet_templates)
 
 def accuracy(output, target, topk=(1,)):
     pred = output.topk(max(topk), 1, True, True)[1].t()
@@ -170,7 +174,6 @@ with torch.no_grad():
         top1 += acc1
         top5 += acc5
         n += images.size(0)
-        print(top1/ n)
 
 top1 = (top1 / n) * 100
 top5 = (top5 / n) * 100 
