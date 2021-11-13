@@ -256,6 +256,7 @@ def load_model(model_type):
     mean=[0.485, 0.456, 0.406],
     std=[0.229, 0.224, 0.225])
     ])
+    return resnet
   if model_type=="wide_resnet50":
     # load checkpoint for st resnet
     resnet=models.wide_resnet50_2(pretrained=True)
@@ -268,6 +269,7 @@ def load_model(model_type):
     mean=[0.485, 0.456, 0.406],
     std=[0.229, 0.224, 0.225])
     ])
+    return resnet
 
   if model_type=="st_alexnet":
     # load checkpoint for st alexnet
