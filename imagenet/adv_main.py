@@ -231,6 +231,44 @@ def load_model(model_type):
     ])
     return resnet
 
+  if model_type=="resnet101":
+    # load checkpoint for st resnet
+    resnet=models.resnet101(pretrained=True)
+    #preprocess for st_resnet50
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225])
+    ])
+    return resnet
+  if model_type=="wide_resnet101":
+    # load checkpoint for st resnet
+    resnet=models.wide_resnet101_2(pretrained=True)
+    #preprocess for st_resnet50
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225])
+    ])
+  if model_type=="wide_resnet50":
+    # load checkpoint for st resnet
+    resnet=models.wide_resnet50_2(pretrained=True)
+    #preprocess for st_resnet50
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225])
+    ])
+
   if model_type=="st_alexnet":
     # load checkpoint for st alexnet
     alexnet=models.alexnet(pretrained=True)
