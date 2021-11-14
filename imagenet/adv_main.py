@@ -305,7 +305,7 @@ def load_model(model_type):
     checkpoint = torch.load('/content/gdrive/MyDrive/model_checkpoints/imagenet_linf_8.pt',map_location=torch.device('cuda') )
     state_dict=checkpoint['model']
     for k in list(state_dict.keys()):
-        if k.startswith('module.attacker.model.') and not k.startswith('module.attacker.normalize') :
+        if k.startswith('module.attacker.model.') :
 
             state_dict[k[len('module.attacker.model.'):]] = state_dict[k]
         del state_dict[k]
@@ -329,8 +329,8 @@ def load_model(model_type):
     checkpoint = torch.load('/content/gdrive/MyDrive/model_checkpoints/imagenet_linf_4.pt',map_location=torch.device('cuda') )
     state_dict=checkpoint['model']
     for k in list(state_dict.keys()):
-        if k.startswith('module.attacker.model.') and not k.startswith('module.attacker.normalize') :
-
+#         if k.startswith('module.attacker.model.') and not k.startswith('module.attacker.normalize') :
+        if k.startswith('module.attacker.model.')  :
             state_dict[k[len('module.attacker.model.'):]] = state_dict[k]
         del state_dict[k]
     resnet.load_state_dict(state_dict)
@@ -353,7 +353,7 @@ def load_model(model_type):
     checkpoint = torch.load('/content/gdrive/MyDrive/model_checkpoints/imagenet_l2_3_0.pt',map_location=torch.device('cuda') )
     state_dict=checkpoint['model']
     for k in list(state_dict.keys()):
-        if k.startswith('module.attacker.model.') and not k.startswith('module.attacker.normalize') :
+        if k.startswith('module.attacker.model.'):
 
             state_dict[k[len('module.attacker.model.'):]] = state_dict[k]
         del state_dict[k]
