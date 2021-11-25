@@ -416,7 +416,10 @@ def load_model(model_type):
     resnet.load_state_dict(state_dict)
     return resnet
   if model_type=='rn50_l2_eps1':
-    resnet=torch.load('/content/gdrive/MyDrive/model_checkpoints/resnet50_l2_eps1.pt')
+    ds = ImageNet('/tmp')
+    resnet, _ = make_and_restore_model(arch='resnet50', dataset=ds,
+                resume_path=f'/content/gdrive/MyDrive/model_checkpoints/{model_type}.ckpt')
+    return resnet
 
 def main():
     args = parser.parse_args()
