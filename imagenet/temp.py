@@ -417,7 +417,7 @@ def load_model(model_type):
         del state_dict[k]
     resnet.load_state_dict(state_dict)
     return resnet
-  if model_type=='rn50_l2_eps1':
+  if model_type=='resnet50_l2_eps1':
     ds = ImageNet('/tmp')
     resnet, _ = make_and_restore_model(arch='resnet50', dataset=ds,
                 resume_path=f'/content/gdrive/MyDrive/model_checkpoints/{model_type}.ckpt')
@@ -514,7 +514,10 @@ def main_worker(gpu, ngpus_per_node, args):
             model.cuda()
         else:
             print("run on gpu")
-            model = torch.nn.DataParallel(model).cuda()
+            if args.arch=='resnet50_l2_eps1':
+              model=model.cuda()
+            else:
+              model = torch.nn.DataParallel(model).cuda()
 
     # define loss function (criterion) and optimizer
     criterion = nn.CrossEntropyLoss().cuda(args.gpu)
@@ -700,8 +703,8 @@ def validate(val_loader, model, criterion, args):
                 output = model(adv_untargeted)
             elif args.arch=='linf_4' or args.arch=='linf_8' or args.arch=='l2_3':
                 output= model((adv_untargeted))
-            elif args.arch=='rn50_l2_eps1':
-                output= model.model((images))
+            elif args.arch=='resnet50_l2_eps1':
+                output= model.model((images.cuda()))
             else:
                 output = model((adv_untargeted))
             loss = criterion(output, target)
