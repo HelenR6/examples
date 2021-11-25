@@ -418,9 +418,17 @@ def load_model(model_type):
     resnet.load_state_dict(state_dict)
     return resnet
   if model_type=='resnet50_l2_eps1':
+    resnet=models.resnet50(pretrained=False)
     ds = ImageNet('/tmp')
-    resnet, _ = make_and_restore_model(arch='resnet50', dataset=ds,
+    total_resnet, checkpoint = make_and_restore_model(arch='resnet50', dataset=ds,
                 resume_path=f'/content/gdrive/MyDrive/model_checkpoints/{model_type}.ckpt')
+    # resnet=total_resnet.attacker
+    state_dict=checkpoint['model']
+    for k in list(state_dict.keys()):
+        if k.startswith('module.attacker.model.') :
+            state_dict[k[len('module.attacker.model.'):]] = state_dict[k]
+        del state_dict[k]
+    resnet.load_state_dict(state_dict)
     return resnet
 
 def main():
@@ -696,15 +704,15 @@ def validate(val_loader, model, criterion, args):
                 images = images.cuda(args.gpu, non_blocking=True)
             if torch.cuda.is_available():
                 target = target.cuda(args.gpu, non_blocking=True)
-            # with torch.enable_grad():
-            #     adv_untargeted = adversary.perturb(images, target)
+            with torch.enable_grad():
+                adv_untargeted = adversary.perturb(images.cuda(), target.cuda())
             # compute output
             if args.arch=='simclr':
                 output = model(adv_untargeted)
             elif args.arch=='linf_4' or args.arch=='linf_8' or args.arch=='l2_3':
                 output= model((adv_untargeted))
             elif args.arch=='resnet50_l2_eps1':
-                output= model.model((images.cuda()))
+                output= model(adv_untargeted)
             else:
                 output = model((adv_untargeted))
             loss = criterion(output, target)
