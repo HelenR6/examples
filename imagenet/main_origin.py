@@ -260,7 +260,7 @@ def main_worker(gpu, ngpus_per_node, args):
                 'state_dict': model.state_dict(),
                 'best_acc1': best_acc1,
                 'optimizer' : optimizer.state_dict(),
-            }, is_best)
+            }, is_best,epoch+1)
 
 
 def train(train_loader, model, criterion, optimizer, epoch, args):
@@ -355,10 +355,12 @@ def validate(val_loader, model, criterion, args):
     return top1.avg
 
 
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
+def save_checkpoint(state, is_best, filename='checkpoint.pth.tar',epoch_num):
     torch.save(state, filename)
-    if is_best:
+    if is_best :
         shutil.copyfile(filename, 'model_best.pth.tar')
+    if epoch_num==30 or epoch_num==60:
+        shutil.copyfile(filename, f'model_epoch{epoch_num}.pth.tar')
 
 
 class AverageMeter(object):
