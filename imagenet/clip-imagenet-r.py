@@ -187,6 +187,6 @@ with torch.no_grad():
 
 top1 = (top1 / n) * 100
 top5 = (top5 / n) * 100 
-
+np.save('/content/gdrive/MyDrive/model_OOD_acc/imagenet-r/clip.npy',top1)
 print(f"Top-1 accuracy: {top1:.2f}")
 print(f"Top-5 accuracy: {top5:.2f}")
