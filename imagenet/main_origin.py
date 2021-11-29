@@ -359,7 +359,7 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar',epoch_num):
     torch.save(state, filename)
     if is_best :
         shutil.copyfile(filename, 'model_best.pth.tar')
-    if epoch_num==30 or epoch_num==60:
+    if epoch_num==30 or epoch_num==60 or epoch_num==1:
         shutil.copyfile(filename, f'model_epoch{epoch_num}.pth.tar')
 
 
