@@ -1,5 +1,5 @@
 
-
+import argparse
 from advertorch.attacks import LinfPGDAttack, L2PGDAttack
 import numpy as np
 import torch
@@ -11,10 +11,12 @@ import clip
 import torch.nn as nn
 
 from tqdm.notebook import tqdm
-
+parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 print("Torch version:", torch.__version__)
+parser.add_argument('--attack', default=None, 
+                    help='attack type ')
+#assert torch.__version__.split(".") >= ["1", "7", "1"], "PyTorch 1.7.1 or later is required"
 
-assert torch.__version__.split(".") >= ["1", "7", "1"], "PyTorch 1.7.1 or later is required"
 
 model, preprocess = clip.load("RN50")
 input_resolution = model.visual.input_resolution
@@ -138,10 +140,24 @@ def accuracy(output, target, topk=(1,)):
     pred = output.topk(max(topk), 1, True, True)[1].t()
     correct = pred.eq(target.view(1, -1).expand_as(pred))
     return [float(correct[:k].reshape(-1).float().sum(0, keepdim=True).cpu().numpy()) for k in topk]
-adversary = L2PGDAttack(
-model.visual, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=9.9756,
-nb_iter=20, eps_iter=1.24695, rand_init=True, clip_min=-1.1793, clip_max=2.1459,
-targeted=False)
+# adversary = L2PGDAttack(
+# model.visual, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=9.9756,
+# nb_iter=20, eps_iter=1.24695, rand_init=True, clip_min=-1.1793, clip_max=2.1459,
+# targeted=False)
+if args.attack=="inf":
+  adversary = LinfPGDAttack(
+  self.model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=4.7579/1020,
+  nb_iter=20, eps_iter=0.000233, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
+  targeted=False)
+if args.attack=='2':
+#               adversary = L2PGDAttack(
+#               self.model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=14.2737,
+#               nb_iter=20, eps_iter=1.784, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
+#               targeted=False)
+  adversary = L2PGDAttack(
+  self.model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=0.7137,
+  nb_iter=20, eps_iter=0.09, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
+  targeted=False)
 with torch.no_grad():
     top1, top5, n = 0., 0., 0.
     for i, (images, target) in enumerate(tqdm(loader)):
@@ -163,6 +179,14 @@ with torch.no_grad():
 
 top1 = (top1 / n) * 100
 top5 = (top5 / n) * 100 
-
+accuracy_array=[]
+accuracy_array.append(top1)
+accuracy_array.append(top5)
+if args.attack=="2":
+  np.save(f'/content/gdrive/MyDrive/model_adv_loss/l2_0.15/clip_accuracy.npy', accuracy_array)
+if args.attack=="1":
+  np.save(f'/content/gdrive/MyDrive/model_adv_loss/l1_40/clip_accuracy.npy', accuracy_array)
+if (args.attack)=="inf":
+  np.save(f'/content/gdrive/MyDrive/model_adv_loss/linf1_1020/clip_accuracy.npy', accuracy_array)
 print(f"Top-1 accuracy: {top1:.2f}")
 print(f"Top-5 accuracy: {top5:.2f}")
