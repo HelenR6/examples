@@ -415,7 +415,7 @@ def load_model(model_type):
         del state_dict[k]
     resnet.load_state_dict(state_dict)
     return resnet
-  if model_type=='resnet50_l2_eps1' or model_type=='resnet50_l2_eps0.01' or model_type=='resnet50_l2_eps0.03' or model_type=='resnet50_l2_eps0.5' or model_type=='resnet50_l2_eps0.25' or model_type=='resnet50_l2_eps3' or model_type=='resnet50_l2_eps5' :
+  if model_type=='resnet50_l2_eps0.1' or model_type=='resnet50_l2_eps1' or model_type=='resnet50_l2_eps0.01' or model_type=='resnet50_l2_eps0.03' or model_type=='resnet50_l2_eps0.5' or model_type=='resnet50_l2_eps0.25' or model_type=='resnet50_l2_eps3' or model_type=='resnet50_l2_eps5' :
     resnet=models.resnet50(pretrained=False)
     ds = ImageNet('/tmp')
     total_resnet, checkpoint = make_and_restore_model(arch='resnet50', dataset=ds,
