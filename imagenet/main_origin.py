@@ -240,6 +240,18 @@ def main_worker(gpu, ngpus_per_node, args):
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
+        if epoch==0:
+            acc1 = validate(val_loader, model, criterion, args)
+            is_best=False
+            save_checkpoint({
+                'epoch': epoch,
+                'arch': args.arch,
+                'state_dict': model.state_dict(),
+                'best_acc1': acc1,
+                'optimizer' : optimizer.state_dict(),
+            }, is_best,epoch+1)
+            
+            
         adjust_learning_rate(optimizer, epoch, args)
 
         # train for one epoch
