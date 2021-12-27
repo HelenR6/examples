@@ -8,8 +8,10 @@ adv loss
 
 
 OOD acc: imagenet-a
+!git clone https://github.com/HelenR6/natural-adv-examples
 # evaluate st_alexnet imagenet-a
 !python natural-adv-examples/eval.py st_alexnet
+!python natural-adv-examples/eval.py moco
 !python natural-adv-examples/eval.py resnet_0
 !python natural-adv-examples/eval.py resnet_30
 !python natural-adv-examples/eval.py resnet_60
