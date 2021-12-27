@@ -825,8 +825,8 @@ def validate(val_loader, model, criterion, args):
     print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
             .format(top1=top1, top5=top5))
     accuracy_array=[]
-    accuracy_array.append(top1.avg)
-    accuracy_array.append(top5.avg)
+    accuracy_array.append(top1.avg.to('cpu'))
+    accuracy_array.append(top5.avg.to('cpu'))
     np.save(f'/content/gdrive/MyDrive/model_adv_loss/{args.attack}/{args.arch}_accuracy.npy', accuracy_array)
     return top1.avg, top5.avg
 
