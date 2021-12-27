@@ -10,3 +10,7 @@ adv loss
 OOD loss: imagenet-a
 # evaluate st_alexnet imagenet-a
 !python natural-adv-examples/eval.py st_alexnet
+!python natural-adv-examples/eval.py resnet_0
+!python natural-adv-examples/eval.py resnet_30
+!python natural-adv-examples/eval.py resnet_60
+!python natural-adv-examples/eval.py resnet_90
