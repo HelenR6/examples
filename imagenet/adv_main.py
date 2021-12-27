@@ -109,14 +109,15 @@ def load_model(model_type):
     return resnet
   if model_type=="moco":
     # load checkpoints of moco
-    state_dict = torch.load('/content/gdrive/MyDrive/model_checkpoints/moco_v1_200ep_pretrain.pth.tar',map_location=torch.device('cpu'))['state_dict']
-    resnet = models.resnet50(pretrained=False)
+    resnet=models.resnet50(pretrained=False)
+    checkpoint = torch.load('/content/gdrive/MyDrive/model_checkpoints/moco_lincls.pth.tar',map_location=torch.device('cpu') )
+    state_dict=checkpoint['state_dict']
     for k in list(state_dict.keys()):
-        if k.startswith('module.encoder_q') and not k.startswith('module.encoder_q.fc'):
-            state_dict[k[len("module.encoder_q."):]] = state_dict[k]
+        if k.startswith('module.') :
+
+            state_dict[k[len('module.'):]] = state_dict[k]
         del state_dict[k]
-    msg = resnet.load_state_dict(state_dict, strict=False)
-    assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
+    resnet.load_state_dict(state_dict)
     #preprocess for moco
     preprocess = transforms.Compose([
     transforms.Resize(256),
@@ -801,12 +802,12 @@ def validate(val_loader, model, criterion, args):
             with torch.enable_grad():
                 adv_untargeted = adversary.perturb(images, target)
             # compute output
-            if args.arch=='simclr':
-                output = model(adv_untargeted)
-            elif args.arch=='linf_4' or args.arch=='linf_8' or args.arch=='l2_3':
-                output= model((adv_untargeted))
-            else:
-                output = model((adv_untargeted))
+            # if args.arch=='simclr':
+            #     output = model(adv_untargeted)
+            # elif args.arch=='linf_4' or args.arch=='linf_8' or args.arch=='l2_3':
+            #     output= model((adv_untargeted))
+            # else:
+            output = model((adv_untargeted))
             loss = criterion(output, target)
             # measure accuracy and record loss
             acc1, acc5 = accuracy(output, target, topk=(1, 5))
