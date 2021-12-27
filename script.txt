@@ -1,0 +1,2 @@
+adv loss
+!python examples/imagenet/adv_main.py -a st_alexnet --attack 'l2_0.15' -b 32 --evaluate --pretrained /content/gdrive/MyDrive/imagenet
