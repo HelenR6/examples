@@ -7,10 +7,16 @@ adv loss
 
 
 
-OOD loss: imagenet-a
+OOD acc: imagenet-a
 # evaluate st_alexnet imagenet-a
 !python natural-adv-examples/eval.py st_alexnet
 !python natural-adv-examples/eval.py resnet_0
 !python natural-adv-examples/eval.py resnet_30
 !python natural-adv-examples/eval.py resnet_60
 !python natural-adv-examples/eval.py resnet_90
+
+OOD acc:imagenet-r
+!python imagenet-r/eval.py resnet_0
+!python imagenet-r/eval.py resnet_30
+!python imagenet-r/eval.py resnet_60
+!python imagenet-r/eval.py resnet_90
