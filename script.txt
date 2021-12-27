@@ -18,6 +18,7 @@ OOD acc: imagenet-a
 !python natural-adv-examples/eval.py resnet_90
 
 OOD acc:imagenet-r
+!git clone https://github.com/HelenR6/imagenet-r
 !python imagenet-r/eval.py resnet_0
 !python imagenet-r/eval.py resnet_30
 !python imagenet-r/eval.py resnet_60
