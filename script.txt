@@ -4,3 +4,9 @@ adv loss
 # evaluate simclr adv
 !git clone https://github.com/HelenR6/simclr-converter
 !python simclr-converter/eval.py '/content/gdrive/MyDrive/imagenet' --attack 'l2_0.15' -a resnet50-1x -b 32
+
+
+
+OOD loss: imagenet-a
+# evaluate st_alexnet imagenet-a
+!python natural-adv-examples/eval.py st_alexnet
