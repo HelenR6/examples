@@ -787,6 +787,11 @@ def validate(val_loader, model, criterion, args):
             model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=4.7579/1020,
             nb_iter=20, eps_iter=0.000233, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
             targeted=False)
+        if args.attack=='linf4_255':
+            adversary = LinfPGDAttack(
+            model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=19.0316/255,
+            nb_iter=20, eps_iter=47.579/5100, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
+            targeted=False)
 #         adversary = L1PGDAttack(
 #         model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=190.316,
 #         nb_iter=20, eps_iter=23.7895, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
