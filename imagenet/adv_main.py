@@ -432,6 +432,86 @@ def load_model(model_type):
         del state_dict[k]
     resnet.load_state_dict(state_dict)
     return resnet
+  if model_type=="resnet_0":
+    resnet=models.resnet50(pretrained=False)
+    checkpoint = torch.load('/content/gdrive/MyDrive/model_checkpoints/0_model_best.pth.tar',map_location=torch.device('cuda') )
+    state_dict=checkpoint['state_dict']
+    for k in list(state_dict.keys()):
+        if k.startswith('module.') :
+
+            state_dict[k[len('module.'):]] = state_dict[k]
+        del state_dict[k]
+    resnet.load_state_dict(state_dict)
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225])
+    ])
+    return resnet
+
+  if model_type=="resnet_30":
+    resnet=models.resnet50(pretrained=False)
+    checkpoint = torch.load('/content/gdrive/MyDrive/model_checkpoints/30_model_best.pth.tar',map_location=torch.device('cuda') )
+    state_dict=checkpoint['state_dict']
+    for k in list(state_dict.keys()):
+        if k.startswith('module.') :
+
+            state_dict[k[len('module.'):]] = state_dict[k]
+        del state_dict[k]
+    resnet.load_state_dict(state_dict)
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225])
+    ])
+    return resnet
+
+  if model_type=="resnet_60":
+    resnet=models.resnet50(pretrained=False)
+    checkpoint = torch.load('/content/gdrive/MyDrive/model_checkpoints/60_model_best.pth.tar',map_location=torch.device('cuda') )
+    state_dict=checkpoint['state_dict']
+    for k in list(state_dict.keys()):
+        if k.startswith('module.') :
+
+            state_dict[k[len('module.'):]] = state_dict[k]
+        del state_dict[k]
+    resnet.load_state_dict(state_dict)
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225])
+    ])
+    return resnet
+
+  if model_type=="resnet_90":
+    resnet=models.resnet50(pretrained=False)
+    checkpoint = torch.load('/content/gdrive/MyDrive/model_checkpoints/90_model_best.pth.tar',map_location=torch.device('cuda') )
+    state_dict=checkpoint['state_dict']
+    for k in list(state_dict.keys()):
+        if k.startswith('module.') :
+
+            state_dict[k[len('module.'):]] = state_dict[k]
+        del state_dict[k]
+    resnet.load_state_dict(state_dict)
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225])
+    ])
+    return resnet
+    
 
 def main():
     args = parser.parse_args()
