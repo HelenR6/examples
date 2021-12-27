@@ -77,6 +77,8 @@ parser.add_argument('--multiprocessing-distributed', action='store_true',
                          'N processes per node, which has N GPUs. This is the '
                          'fastest way to use PyTorch for either single node or '
                          'multi node data parallel training')
+parser.add_argument('--attack', default='', type=str,
+                    help='attack type')
 
 best_acc1 = 0
 def load_model(model_type):
@@ -689,18 +691,21 @@ def validate(val_loader, model, criterion, args):
         # model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=0.15,
         # nb_iter=40, eps_iter=0.01, rand_init=True, clip_min=0.0, clip_max=1.0,
         # targeted=False)
-#         adversary = L2PGDAttack(
-#         model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=14.2737,
-#         nb_iter=20, eps_iter=1.784, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
-#         targeted=False)
-        adversary = L2PGDAttack(
-        model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=0.7137,
-        nb_iter=20, eps_iter=0.09, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
-        targeted=False)
-#         adversary = LinfPGDAttack(
-#         model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=4.7579/1020,
-#         nb_iter=20, eps_iter=0.000233, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
-#         targeted=False)
+        if args.attack=='l2_3':
+            adversary = L2PGDAttack(
+            model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=14.2737,
+            nb_iter=20, eps_iter=1.784, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
+            targeted=False)
+        if args.attack=='l2_0.15':
+            adversary = L2PGDAttack(
+            model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=0.7137,
+            nb_iter=20, eps_iter=0.09, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
+            targeted=False)
+        if args.attack=='linf1_1020':
+            adversary = LinfPGDAttack(
+            model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=4.7579/1020,
+            nb_iter=20, eps_iter=0.000233, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
+            targeted=False)
 #         adversary = L1PGDAttack(
 #         model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=190.316,
 #         nb_iter=20, eps_iter=23.7895, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
@@ -742,7 +747,7 @@ def validate(val_loader, model, criterion, args):
     accuracy_array=[]
     accuracy_array.append(top1.avg)
     accuracy_array.append(top5.avg)
-    np.save(f'/content/gdrive/MyDrive/model_adv_loss/l2_0.15/{args.arch}_accuracy.npy', accuracy_array)
+    np.save(f'/content/gdrive/MyDrive/model_adv_loss/{args.attack}/{args.arch}_accuracy.npy', accuracy_array)
     return top1.avg, top5.avg
 
 
