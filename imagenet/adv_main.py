@@ -535,7 +535,7 @@ def load_model(model_type):
 
   if model_type=="v_resnet_90":
     resnet=models.resnet50(pretrained=False)
-    checkpoint = torch.load('/content/gdrive/MyDrive/model_checkpoints/model_epoch90.pth.tar',map_location=torch.device('cuda') )
+    checkpoint = torch.load('/content/gdrive/MyDrive/model_checkpoints/model_best.pth.tar',map_location=torch.device('cuda') )
     state_dict=checkpoint['state_dict']
     for k in list(state_dict.keys()):
         if k.startswith('module.') :
