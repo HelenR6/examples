@@ -22,7 +22,7 @@ model, preprocess = clip.load("RN50")
 input_resolution = model.visual.input_resolution
 context_length = model.context_length
 vocab_size = model.vocab_size
-
+args = parser.parse_args()
 print("Model parameters:", f"{np.sum([int(np.prod(p.shape)) for p in model.parameters()]):,}")
 print("Input resolution:", input_resolution)
 print("Context length:", context_length)
@@ -146,12 +146,12 @@ def accuracy(output, target, topk=(1,)):
 # targeted=False)
 if args.attack=="inf":
   adversary = LinfPGDAttack(
-  self.model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=4.7579/1020,
+  model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=4.7579/1020,
   nb_iter=20, eps_iter=0.000233, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
   targeted=False)
 if args.attack=="inf4":
   adversary = LinfPGDAttack(
-  self.model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=19.0316/255,
+  model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=19.0316/255,
   nb_iter=20, eps_iter=47.579/5100, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
   targeted=False)
 if args.attack=='2':
@@ -160,7 +160,7 @@ if args.attack=='2':
 #               nb_iter=20, eps_iter=1.784, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
 #               targeted=False)
   adversary = L2PGDAttack(
-  self.model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=0.7137,
+  model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=0.7137,
   nb_iter=20, eps_iter=0.09, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
   targeted=False)
 with torch.no_grad():
