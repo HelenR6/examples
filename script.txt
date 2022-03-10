@@ -4,6 +4,13 @@ adv loss
 # evaluate simclr adv
 !git clone https://github.com/HelenR6/simclr-converter
 !python simclr-converter/eval.py '/content/gdrive/MyDrive/imagenet' --attack 'l2_0.15' -a resnet50-1x -b 32
+#evaluate clip on adversarial examples
+! pip install git+https://github.com/openai/CLIP.git
+!python examples/imagenet/clip_test.py --attack 2
+#evaluate cornet on adversarial examples
+!python CORnet/run.py eval_imagenet --model Z --attack inf4 --data_path '/content/gdrive/MyDrive/imagenet' --batch_size 32
+#evaluate vonenet on adversarial examples
+!python vonenet/run.py  val --model_arch cornets --attack inf4 --in_path '/content/gdrive/MyDrive/imagenet' --batch_size 32
 
 
 
