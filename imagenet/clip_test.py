@@ -149,6 +149,11 @@ if args.attack=="inf":
   self.model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=4.7579/1020,
   nb_iter=20, eps_iter=0.000233, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
   targeted=False)
+if args.attack=="inf4":
+  adversary = LinfPGDAttack(
+  self.model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=19.0316/255,
+  nb_iter=20, eps_iter=47.579/5100, rand_init=True, clip_min=-2.1179, clip_max=2.6400,
+  targeted=False)
 if args.attack=='2':
 #               adversary = L2PGDAttack(
 #               self.model, loss_fn=nn.CrossEntropyLoss(reduction="sum"), eps=14.2737,
@@ -186,6 +191,8 @@ if args.attack=="2":
   np.save(f'/content/gdrive/MyDrive/model_adv_loss/l2_0.15/clip_accuracy.npy', accuracy_array)
 if args.attack=="1":
   np.save(f'/content/gdrive/MyDrive/model_adv_loss/l1_40/clip_accuracy.npy', accuracy_array)
+if (args.attack)=="inf4":
+  np.save(f'/content/gdrive/MyDrive/model_adv_loss/linf4_255/clip_accuracy.npy', accuracy_array)
 if (args.attack)=="inf":
   np.save(f'/content/gdrive/MyDrive/model_adv_loss/linf1_1020/clip_accuracy.npy', accuracy_array)
 print(f"Top-1 accuracy: {top1:.2f}")
