@@ -151,7 +151,7 @@ def load_model(model_type):
     return resnet
 
   if model_type=="self-trained-2-255.pth.tar":
-    checkpoint = torch.load('/Users/apple/Desktop/self-trined-2-255.pth.tar',map_location=torch.device('cpu') )
+    checkpoint = torch.load('/content/gdrive/MyDrive/model_checkpoints/self-trined-2-255.pth.tar',map_location=torch.device('cpu') )
     state_dict=checkpoint['state_dict']
     for k in list(state_dict.keys()):
         if k.startswith('module.'):
