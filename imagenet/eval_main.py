@@ -150,7 +150,15 @@ def load_model(model_type):
     ])
     return resnet
 
-
+  if model_type=="self-trained-2-255.pth.tar":
+    checkpoint = torch.load('/Users/apple/Desktop/self-trined-2-255.pth.tar',map_location=torch.device('cpu') )
+    state_dict=checkpoint['state_dict']
+    for k in list(state_dict.keys()):
+        if k.startswith('module.'):
+            state_dict[k[len('module.'):]] = state_dict[k]
+        del state_dict[k]
+    resnet.load_state_dict(state_dict)
+        
   if model_type=="mocov2":
     # load checkpoints of mocov2
     state_dict = torch.load('/content/gdrive/MyDrive/moco/moco_v2_200ep_pretrain.pth.tar',map_location=torch.device('cpu'))['state_dict']
