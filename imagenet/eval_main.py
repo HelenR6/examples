@@ -82,6 +82,15 @@ parser.add_argument('--attack', default='', type=str,
 
 best_acc1 = 0
 def load_model(model_type):
+  if model_type=="ResNet18WideX4":
+    state_dict = torch.load('/content/gdrive/MyDrive/model_checkpoints/resnet18widex4_73.pt',map_location=torch.device('cpu'))['state_dict']
+    resnet =ResNet18WideX4(1000, 'mean', 1, 0.1)
+    for k in list(state_dict.keys()):
+        if k.startswith('module.') :
+            state_dict[k[len('module.'):]] = state_dict[k]
+        del state_dict[k]
+    resnet.load_state_dict(state_dict)  
+    
   if model_type=="simclr":
     # load checkpoint for simclr
     checkpoint = torch.load('/content/gdrive/MyDrive/model_checkpoints/resnet50-1x.pth')
