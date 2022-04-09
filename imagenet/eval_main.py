@@ -21,6 +21,7 @@ from advertorch.attacks import LinfPGDAttack, L2PGDAttack,L1PGDAttack
 import numpy as np
 from robustness.datasets import CIFAR,ImageNet
 from robustness.model_utils import make_and_restore_model
+from resnet_imagenet import *
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -90,6 +91,7 @@ def load_model(model_type):
             state_dict[k[len('module.'):]] = state_dict[k]
         del state_dict[k]
     resnet.load_state_dict(state_dict)  
+    return resnet
     
   if model_type=="simclr":
     # load checkpoint for simclr
