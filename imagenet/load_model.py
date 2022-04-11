@@ -333,8 +333,17 @@ def load_model(model_type):
     from robustness.datasets import CIFAR,ImageNet
     from robustness.model_utils import make_and_restore_model
     ds = ImageNet('/tmp')
-    resnet, _ = make_and_restore_model(arch='resnet50', dataset=ds,
+    resnet=models.resnet50(pretrained=False)
+    total_resnet, checkpoint = make_and_restore_model(arch='resnet50', dataset=ds,
                 resume_path=f'/content/gdrive/MyDrive/model_checkpoints/{model_type}.ckpt')
+    # resnet=total_resnet.attacker
+    state_dict=checkpoint['model']
+    for k in list(state_dict.keys()):
+        if k.startswith('module.attacker.model.') :
+            state_dict[k[len('module.attacker.model.'):]] = state_dict[k]
+        del state_dict[k]
+    resnet.load_state_dict(state_dict)
+    
     preprocess = transforms.Compose([
     transforms.Resize(256),
     transforms.CenterCrop(224),
