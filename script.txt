@@ -30,3 +30,15 @@ OOD acc:imagenet-r
 !python imagenet-r/eval.py resnet_30
 !python imagenet-r/eval.py resnet_60
 !python imagenet-r/eval.py resnet_90
+
+OOD acc:imagenet-sketch
+#特殊模型
+!python CORnet/run_imagenet_sketch.py eval_imagenet --model Z --data_path '/content/gdrive/MyDrive/sketch' --batch_size 64
+!python CORnet/run_imagenet_sketch.py eval_imagenet --model S --data_path '/content/gdrive/MyDrive/sketch' --batch_size 64
+!python CORnet/run_imagenet_sketch.py eval_imagenet --model RT --data_path '/content/gdrive/MyDrive/sketch' --batch_size 64
+!python vonenet/run_imagenet_sketch.py  val --model_arch cornets --in_path '/content/gdrive/MyDrive/sketch' --batch_size 64
+!python simclr-converter/imagenet-sketch-eval.py '/content/gdrive/MyDrive/sketch'  -a resnet50-1x -b 64
+!python examples/imagenet/clip-imagenet-sketch.py 
+#常规模型
+!python examples/imagenet/sketch_main.py -a st_resnet -b 64 --evaluate --pretrained /content/gdrive/MyDrive/sketch
+!python examples/imagenet/sketch_main.py -a resnet50_l2_eps0.1 -b 64 --evaluate --pretrained /content/gdrive/MyDrive/sketch
