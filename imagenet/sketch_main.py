@@ -17,7 +17,6 @@ import torch.utils.data.distributed
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
-from advertorch.attacks import LinfPGDAttack, L2PGDAttack
 import numpy as np
 from pathlib import Path
 from load_model import load_model
@@ -79,7 +78,7 @@ parser.add_argument('--multiprocessing-distributed', action='store_true',
                          'multi node data parallel training')
 
 best_acc1 = 0
-resnet=load_model(model_type)
+
 
 
 def main():
