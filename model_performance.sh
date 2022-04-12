@@ -1,7 +1,7 @@
-allAttacks=("l2_0.15","l2_3","linf1_1020","linf4_255")
+allAttacks=("l2_0.15" "l2_3" "linf1_1020" "linf4_255")
 for model_name in "$@"
 do
-    for attack in allAttacks
+    for attack in ${allAttacks[@]};
         do
             python examples/imagenet/adv_main.py -a $model_name --attack $attack -b 32 --evaluate --pretrained /content/gdrive/MyDrive/imagenet
         done
