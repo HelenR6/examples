@@ -21,7 +21,7 @@ from advertorch.attacks import LinfPGDAttack, L2PGDAttack,L1PGDAttack
 import numpy as np
 from robustness.datasets import CIFAR,ImageNet
 from robustness.model_utils import make_and_restore_model
-from resnet_imagenet import *
+
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -84,6 +84,7 @@ parser.add_argument('--attack', default='', type=str,
 best_acc1 = 0
 def load_model(model_type):
   if model_type=="ResNet18WideX4":
+    from resnet_imagenet import *
     state_dict = torch.load('/content/gdrive/MyDrive/model_checkpoints/resnet18widex4_73.pt',map_location=torch.device('cpu'))['state_dict']
     resnet =ResNet18WideX4(1000, 'mean', 1, 0.1)
     for k in list(state_dict.keys()):
