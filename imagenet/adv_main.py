@@ -649,7 +649,7 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.pretrained:
         print("=> using pre-trained model '{}'".format(args.arch))
         # model = models.__dict__[args.arch](pretrained=True)
-        model = load_model(args.arch)
+        model,_ = load_model(args.arch)
     else:
         print("=> creating model '{}'".format(args.arch))
         model = models.__dict__[args.arch]()
