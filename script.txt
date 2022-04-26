@@ -23,6 +23,7 @@ OOD acc: imagenet-a
 !python natural-adv-examples/eval.py resnet_30
 !python natural-adv-examples/eval.py resnet_60
 !python natural-adv-examples/eval.py resnet_90
+!python simclr-converter/imagenet-a-eval2.py
 
 OOD acc:imagenet-r
 !git clone https://github.com/HelenR6/imagenet-r
@@ -30,6 +31,7 @@ OOD acc:imagenet-r
 !python imagenet-r/eval.py resnet_30
 !python imagenet-r/eval.py resnet_60
 !python imagenet-r/eval.py resnet_90
+!python simclr-converter/imagenet-r-eval2.py
 
 OOD acc:imagenet-sketch
 #特殊模型
