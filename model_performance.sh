@@ -3,7 +3,7 @@ for model_name in "$@"
 do
     for attack in ${allAttacks[@]};
         do
-            python examples/imagenet/adv_main.py -a $model_name --attack $attack -b 32 --evaluate --pretrained /content/gdrive/MyDrive/imagenet
+            python examples/imagenet/adv_main.py -a $model_name --attack $attack -b 128 --evaluate --pretrained /content/gdrive/MyDrive/imagenet
         done
     python imagenet-r/eval.py $model_name
     python natural-adv-examples/eval.py $model_name
